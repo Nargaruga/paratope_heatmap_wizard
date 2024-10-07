@@ -24,9 +24,10 @@ class Heatmap:
 
     default_prob_threshold = 0.3
 
-    def __init__(self, molecule_name, threshold):
+    def __init__(self, molecule_name, threshold, gradient):
         self.prob_threshold = threshold  # threshold for label visualization
         self.molecule_name = molecule_name  # the molecule to create the heatmap on
+        self.gradient = gradient # the color gradient for the heatmap
         self.annotated_cdrs = []  # CDRs annotated with probabilities
 
     def compute_scores(self):
@@ -67,7 +68,7 @@ class Heatmap:
                     f"b = {score_int}",
                 )
 
-        cmd.spectrum("b", "red_green", self.molecule_name, 0, 100)
+        cmd.spectrum("b", self.gradient, self.molecule_name, 0, 100)
 
     def create_labels(self):
         """Associate to each residue a label with the probability of being part of the paratope."""
@@ -111,6 +112,11 @@ class Heatmap:
         self.create_labels()
         cmd.deselect()
         self.select_paratope()
+
+    def update_gradient(self, gradient):
+        """Update the color gradient of the heatmap."""
+        self.gradient = gradient
+        cmd.spectrum("b", gradient, self.molecule_name, 0, 100)
 
     def show_labels(self):
         """Show the labels on the protein structure."""

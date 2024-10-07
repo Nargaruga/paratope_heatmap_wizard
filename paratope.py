@@ -17,9 +17,11 @@ class Paratope(Wizard):
         self.prob_threshold = (
             0.8  # residues with probability below this threshold will not be labeled
         )
+        self.gradient = "grey_green"  # the color gradient for the heatmap
 
         self.populate_molecule_choices()
         self.populate_threshold_choices()
+        self.populate_gradient_choices()
 
     def populate_molecule_choices(self):
         """Populate the menu with the available molecules in the session."""
@@ -43,6 +45,18 @@ class Paratope(Wizard):
                 1,
                 str(threshold),
                 "cmd.get_wizard().set_threshold(" + str(threshold) + ")",
+            ])
+
+    def populate_gradient_choices(self):
+        """Populate the menu with the available gradient choices."""
+
+        self.menu["gradient"] = [[2, "Gradient", ""]]
+        gradients = ["grey_green", "red_green"]
+        for gradient in gradients:
+            self.menu["gradient"].append([
+                1,
+                gradient,
+                "cmd.get_wizard().set_gradient('" + gradient + "')",
             ])
 
     def set_molecule(self, molecule):
@@ -69,12 +83,20 @@ class Paratope(Wizard):
             self.heatmap.update_threshold(threshold)
         cmd.refresh_wizard()
 
+    def set_gradient(self, gradient):
+        """Set the color gradient for the heatmap."""
+
+        self.gradient = gradient
+        if self.heatmap is not None:
+            self.heatmap.update_gradient(gradient)
+        cmd.refresh_wizard()
+
     def run(self):
         if self.molecule is None:
             print("Please select a molecule.")
             return
 
-        self.heatmap = paratope_heatmap.Heatmap(self.molecule, self.prob_threshold)
+        self.heatmap = paratope_heatmap.Heatmap(self.molecule, self.prob_threshold, self.gradient)
 
         """Compute and visualize the paratope heatmap on the selected molecule."""
         try:
@@ -103,12 +125,14 @@ class Paratope(Wizard):
             molecule_label = self.molecule
 
         threshold_label = "Threshold: " + str(self.prob_threshold)
+        gradient_label = f"Gradient: {self.gradient}"
         show_labels_label = f"Show Labels: {self.show_labels}"
 
         return [
             [1, "Paratope Heatmap", ""],
             [3, molecule_label, "molecule"],
             [3, threshold_label, "threshold"],
+            [3, gradient_label, "gradient"],
             [2, show_labels_label, "cmd.get_wizard().toggle_labels()"],
             [2, "Run", "cmd.get_wizard().run()"],
             [2, "Dismiss", "cmd.set_wizard()"],
