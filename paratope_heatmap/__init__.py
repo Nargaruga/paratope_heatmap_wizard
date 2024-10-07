@@ -75,7 +75,7 @@ class Heatmap:
         print("Creating labels...")
 
         cmd.label("all", "''")
-        cmd.set("float_labels", True)
+        cmd.set("label_position", [10.0, 0.0, 1.75])
         cmd.set("label_connector", True)
 
         for cdr in self.annotated_cdrs:
@@ -89,10 +89,28 @@ class Heatmap:
                     f'"({residue.name}, {residue.id}, {residue.prob:.2f})"',
                 )
 
+    def select_paratope(self):
+        for cdr in self.annotated_cdrs:
+            for residue in cdr.residues:
+                # Ignore residues with low probability
+                if float(residue.prob) <= self.prob_threshold:
+                    continue
+
+                cmd.select(
+                    f"{self.molecule_name}_paratope",
+                    f"%{self.molecule_name} and chain {residue.chain} and resi {residue.id}",
+                    merge=1,
+                )
+
+        cmd.zoom(f"{self.molecule_name}_paratope", animate=1)
+        cmd.orient(f"{self.molecule_name}_paratope", animate=1)
+
     def update_threshold(self, threshold):
         """Update the probability threshold and redraw the labels."""
         self.prob_threshold = threshold
         self.create_labels()
+        cmd.deselect()
+        self.select_paratope()
 
     def show_labels(self):
         """Show the labels on the protein structure."""

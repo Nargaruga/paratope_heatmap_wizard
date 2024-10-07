@@ -87,8 +87,10 @@ class Paratope(Wizard):
             return
 
         cmd.show_as("licorice", self.molecule)
+        # TODO: avoid doing 3 separate loops
         self.heatmap.create_heatmap()
         self.heatmap.create_labels()
+        self.heatmap.select_paratope()
 
         cmd.refresh_wizard()
 
