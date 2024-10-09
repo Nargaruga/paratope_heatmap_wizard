@@ -20,9 +20,9 @@ def compute_cdrs(sequence: str, ids: list[int], chain: str) -> list[CDR]:
     # CDR1: from 26 to 32
     # CDR2: from 52 to 56
     # CDR3: from 95 to 102
-    extended_cdr1_range = range(26 - 2, 32 + 2)
-    extended_cdr2_range = range(52 - 2, 56 + 2)
-    extended_cdr3_range = range(95 - 2, 102 + 2)
+    extended_cdr1_range = range(26 - 2, 32 + 3)
+    extended_cdr2_range = range(52 - 2, 56 + 3)
+    extended_cdr3_range = range(95 - 2, 102 + 3)
     extended_cdrs = [CDR(), CDR(), CDR()]
 
     for i, ((position, _), res_name) in enumerate(numbering):
