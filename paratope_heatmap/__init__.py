@@ -6,7 +6,6 @@ from . import parapred_integration
 
 def get_sequence_and_ids(selection: str) -> tuple[str, list[int]]:
     """Returns the sequence of the selection along with the residue IDs."""
-
     fasta_str = cmd.get_fastastr(selection)
     # Remove the header line and join the rows
     sequence = "".join(fasta_str.split("\n")[1:])
@@ -24,10 +23,11 @@ class Heatmap:
 
     default_prob_threshold = 0.3
 
-    def __init__(self, molecule_name, threshold, gradient):
+    def __init__(self, molecule_name, selection_name, threshold, gradient):
         self.prob_threshold = threshold  # threshold for label visualization
         self.molecule_name = molecule_name  # the molecule to create the heatmap on
-        self.gradient = gradient # the color gradient for the heatmap
+        self.selection_name = selection_name  # the selection name for the paratope
+        self.gradient = gradient  # the color gradient for the heatmap
         self.annotated_cdrs = []  # CDRs annotated with probabilities
 
     def compute_scores(self):
@@ -60,6 +60,7 @@ class Heatmap:
         print("Creating heatmap...")
 
         cmd.alter("all", "b = 0")
+        cmd.color("grey", self.molecule_name)
         for cdr in self.annotated_cdrs:
             for residue in cdr.residues:
                 score_int = int(residue.prob * 100)
@@ -67,8 +68,15 @@ class Heatmap:
                     f"%{self.molecule_name} and chain {residue.chain} and resi {residue.id}",
                     f"b = {score_int}",
                 )
+                if score_int > 50:
+                    cmd.select(
+                        "to_color",
+                        f"%{self.molecule_name} and chain {residue.chain} and resi {residue.id}",
+                        merge=1,
+                    )
 
-        cmd.spectrum("b", self.gradient, self.molecule_name, 0, 100)
+        cmd.spectrum("b", self.gradient, "to_color", 50, 100)
+        cmd.delete("to_color")
 
     def create_labels(self):
         """Associate to each residue a label with the probability of being part of the paratope."""
@@ -98,13 +106,13 @@ class Heatmap:
                     continue
 
                 cmd.select(
-                    f"{self.molecule_name}_paratope",
+                    self.selection_name,
                     f"%{self.molecule_name} and chain {residue.chain} and resi {residue.id}",
                     merge=1,
                 )
 
-        cmd.zoom(f"{self.molecule_name}_paratope", animate=1)
-        cmd.orient(f"{self.molecule_name}_paratope", animate=1)
+        cmd.zoom(self.selection_name, animate=1)
+        cmd.orient(self.selection_name, animate=1)
 
     def update_threshold(self, threshold):
         """Update the probability threshold and redraw the labels."""
@@ -116,7 +124,7 @@ class Heatmap:
     def update_gradient(self, gradient):
         """Update the color gradient of the heatmap."""
         self.gradient = gradient
-        cmd.spectrum("b", gradient, self.molecule_name, 0, 100)
+        self.create_heatmap()
 
     def show_labels(self):
         """Show the labels on the protein structure."""
@@ -128,5 +136,6 @@ class Heatmap:
     def reset(self):
         cmd.label("all", "''")
         self.molecule_name = ""
+        self.selection_name = ""
         self.annotated_cdrs = []
         self.prob_threshold = Heatmap.default_prob_threshold

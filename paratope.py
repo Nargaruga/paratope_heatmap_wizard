@@ -11,13 +11,16 @@ class Paratope(Wizard):
         Wizard.__init__(self, _self)
         self.heatmap = None
         self.molecule = None  # the molecule to be used for the heatmap
+        self.selection_name = (
+            None  # the name of the selection to be used for the heatmap
+        )
         self.show_labels = (
             True  # whether to show the probability labels on the protein structure
         )
         self.prob_threshold = (
             0.8  # residues with probability below this threshold will not be labeled
         )
-        self.gradient = "grey_green"  # the color gradient for the heatmap
+        self.gradient = "red_green"  # the color gradient for the heatmap
 
         self.populate_molecule_choices()
         self.populate_threshold_choices()
@@ -29,11 +32,13 @@ class Paratope(Wizard):
         molecules = cmd.get_names("objects")
         self.menu["molecule"] = [[2, "Molecule", ""]]
         for m in molecules:
-            self.menu["molecule"].append([
-                1,
-                m,
-                'cmd.get_wizard().set_molecule("' + m + '")',
-            ])
+            self.menu["molecule"].append(
+                [
+                    1,
+                    m,
+                    'cmd.get_wizard().set_molecule("' + m + '")',
+                ]
+            )
 
     def populate_threshold_choices(self):
         """Populate the menu with the available threshold choices."""
@@ -41,29 +46,27 @@ class Paratope(Wizard):
         self.menu["threshold"] = [[2, "Threshold", ""]]
         thresholds = [0.7, 0.8, 0.9]
         for threshold in thresholds:
-            self.menu["threshold"].append([
-                1,
-                str(threshold),
-                "cmd.get_wizard().set_threshold(" + str(threshold) + ")",
-            ])
+            self.menu["threshold"].append(
+                [
+                    1,
+                    str(threshold),
+                    "cmd.get_wizard().set_threshold(" + str(threshold) + ")",
+                ]
+            )
 
     def populate_gradient_choices(self):
         """Populate the menu with the available gradient choices."""
 
         self.menu["gradient"] = [[2, "Gradient", ""]]
-        gradients = ["grey_green", "red_green"]
+        gradients = ["red_green", "grey_green"]
         for gradient in gradients:
-            self.menu["gradient"].append([
-                1,
-                gradient,
-                "cmd.get_wizard().set_gradient('" + gradient + "')",
-            ])
-
-    def set_molecule(self, molecule):
-        """Set the molecule to be used for the heatmap."""
-
-        self.molecule = molecule
-        cmd.refresh_wizard()
+            self.menu["gradient"].append(
+                [
+                    1,
+                    gradient,
+                    "cmd.get_wizard().set_gradient('" + gradient + "')",
+                ]
+            )
 
     def toggle_labels(self):
         """Toggle the visibility of the labels on the protein structure."""
@@ -74,6 +77,18 @@ class Paratope(Wizard):
         else:
             cmd.hide("labels")
         cmd.refresh_wizard()
+
+    def set_molecule(self, molecule):
+        """Set the molecule to be used for the heatmap."""
+
+        self.molecule = molecule
+        self.selection_name = f"{molecule}_paratope"
+        cmd.refresh_wizard()
+
+    def set_selection_name(self, selection_name):
+        """Set the name of the selection to be used for the heatmap."""
+
+        self.selection_name = selection_name
 
     def set_threshold(self, threshold):
         """Set the minimum threshold for showing probability labels."""
@@ -92,13 +107,15 @@ class Paratope(Wizard):
         cmd.refresh_wizard()
 
     def run(self):
+        """Compute and visualize the paratope heatmap on the selected molecule."""
+
         if self.molecule is None:
             print("Please select a molecule.")
             return
 
-        self.heatmap = paratope_heatmap.Heatmap(self.molecule, self.prob_threshold, self.gradient)
-
-        """Compute and visualize the paratope heatmap on the selected molecule."""
+        self.heatmap = paratope_heatmap.Heatmap(
+            self.molecule, self.selection_name, self.prob_threshold, self.gradient
+        )
         try:
             self.heatmap.compute_scores()
         except (
