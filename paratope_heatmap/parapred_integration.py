@@ -19,7 +19,7 @@ def score_cdrs(cdrs: list[CDR]):
     ]
     lookup_cdr = dict([(v, i) for i, v in enumerate(sorted_cdr_strings)])
 
-    # Encoded is a tensor of (batch_size x features x max_length). so is mask.
+    # Encoded is a tensor of (batch_size x features x max_length). So is mask.
     encoded, lengths = encode_batch(sorted_cdr_strings, max_length=40)
     mask = generate_mask(encoded, lengths)
 
