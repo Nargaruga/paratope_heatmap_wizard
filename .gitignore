@@ -1,3 +1,7 @@
 *__pycache__
 .vscode
 *.cif
+
+weights/
+tmp/
+installation_data.yaml
