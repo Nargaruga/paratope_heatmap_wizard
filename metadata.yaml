@@ -1,0 +1,15 @@
+name: paratope
+menu_entry: "Paratope Heatmap"
+default_env: pymol_paratope_heatmap
+use_vr: true
+
+python_version: 3.9
+pymol_version: 3.3.0
+openvr_version: 1.0.17
+
+extra_dirs:
+    - paratope_heatmap
+    - weights
+
+pre_script: "scripts/install_external_deps.sh"
+post_script: ""

@@ -1,0 +1,10 @@
+[submodule "ext/ANARCI"]
+	path = ext/ANARCI
+	url = git@github.com:oxpig/ANARCI.git
+[submodule "ext/parapred-pytorch"]
+	path = ext/parapred-pytorch
+	url = git@github.com:alchemab/parapred-pytorch.git
+	branch = v1.0.2
+[submodule "ext/pymol_wizard_installer"]
+	path = ext/pymol_wizard_installer
+	url = git@github.com:Nargaruga/pymol_wizard_installer.git
