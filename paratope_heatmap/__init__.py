@@ -84,7 +84,6 @@ class Heatmap:
         print("Creating labels...")
 
         cmd.label("all", "''")
-        cmd.set("label_position", [10.0, 0.0, 1.75])
         cmd.set("label_connector", True)
 
         for cdr in self.annotated_cdrs:

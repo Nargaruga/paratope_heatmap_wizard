@@ -17,6 +17,9 @@ class Paratope(Wizard):
         self.show_labels = (
             True  # whether to show the probability labels on the protein structure
         )
+        self.distance_labels = (
+            False  # whether to move the labels to the side of the residues
+        )
         self.prob_threshold = (
             0.8  # residues with probability below this threshold will not be labeled
         )
@@ -78,6 +81,16 @@ class Paratope(Wizard):
             cmd.hide("labels")
         cmd.refresh_wizard()
 
+    def toggle_label_pos(self):
+        """Toggle the position of the labels on the protein structure."""
+
+        self.distance_labels = not self.distance_labels
+        if self.distance_labels:
+            cmd.set("label_position", [0.0, 0.0, 1.75])
+        else:
+            cmd.set("label_position", [10.0, 0.0, 1.75])
+        cmd.refresh_wizard()
+
     def set_molecule(self, molecule):
         """Set the molecule to be used for the heatmap."""
 
@@ -122,8 +135,8 @@ class Paratope(Wizard):
             paratope_heatmap.anarci_integration.AnarciError,
             FileNotFoundError,
         ) as e:
-            print(f"Error: {e}")
-            return
+            print(f"Failed to identify paratope: {e}")
+            raise
 
         cmd.show_as("licorice", self.molecule)
         # TODO: avoid doing 3 separate loops
@@ -144,6 +157,7 @@ class Paratope(Wizard):
         threshold_label = "Threshold: " + str(self.prob_threshold)
         gradient_label = f"Gradient: {self.gradient}"
         show_labels_label = f"Show Labels: {self.show_labels}"
+        distance_labels_label = f"Distance Labels: {self.distance_labels}"
 
         return [
             [1, "Paratope Heatmap", ""],
@@ -151,6 +165,7 @@ class Paratope(Wizard):
             [3, threshold_label, "threshold"],
             [3, gradient_label, "gradient"],
             [2, show_labels_label, "cmd.get_wizard().toggle_labels()"],
+            [2, distance_labels_label, "cmd.get_wizard().toggle_label_pos()"],
             [2, "Run", "cmd.get_wizard().run()"],
             [2, "Dismiss", "cmd.set_wizard()"],
         ]
