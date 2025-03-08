@@ -11,5 +11,5 @@ extra_dirs:
     - paratope_heatmap
     - weights
 
-pre_script: "scripts/install_external_deps.sh"
+pre_script: "scripts/pre_install.py"
 post_script: ""
