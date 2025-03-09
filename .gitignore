@@ -2,6 +2,7 @@
 .vscode
 *.cif
 
+ext/muscle
 weights/
 tmp/
 installation_data.json
