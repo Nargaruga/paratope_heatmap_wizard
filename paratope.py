@@ -1,3 +1,6 @@
+import os
+import pathlib
+
 from pymol.wizard import Wizard
 from pymol import cmd
 
@@ -130,7 +133,8 @@ class Paratope(Wizard):
             self.molecule, self.selection_name, self.prob_threshold, self.gradient
         )
         try:
-            self.heatmap.compute_scores()
+            weights_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "paratope_extra", "parapred_pytorch.h5")
+            self.heatmap.compute_scores(weights_path)
         except (
             paratope_heatmap.anarci_integration.AnarciError,
             FileNotFoundError,

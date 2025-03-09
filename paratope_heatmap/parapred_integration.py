@@ -1,5 +1,3 @@
-import os
-
 import torch
 from parapred.model import Parapred, clean_output
 from parapred.cnn import generate_mask
@@ -8,7 +6,7 @@ from parapred.preprocessing import encode_batch
 from .cdr import CDR
 
 
-def score_cdrs(cdrs: list[CDR]):
+def score_cdrs(cdrs: list[CDR], weights_path):
     """Computes the probability for each CDR atom to be part of the paratope."""
 
     sequences = [cdr.get_sequence() for cdr in cdrs]
@@ -25,11 +23,7 @@ def score_cdrs(cdrs: list[CDR]):
 
     # Initialise the model and load pretrained weights
     model = Parapred()
-    model.load_state_dict(
-        torch.load(
-            os.path.join(os.path.dirname(__file__), "../weights", "parapred_pytorch.h5")
-        )
-    )
+    model.load_state_dict(torch.load(weights_path))
 
     # Trigger evaluation mode and don't allow gradients to move around
     _ = model.eval()
