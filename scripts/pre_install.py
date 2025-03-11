@@ -116,7 +116,7 @@ def main():
         + [
             "conda",
             "run",
-            " --no-capture-output",
+            "--no-capture-output",
             "-n",
             env_name,
             "pip",
