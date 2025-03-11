@@ -79,7 +79,7 @@ def compute_cdrs(sequence: str, ids: list[int], chain: str) -> list[CDR]:
     extended_cdrs = [CDR(), CDR(), CDR()]
 
     filtered = [
-        (res_pos, res_name) for (res_pos, res_name) in numbering if res_name != "-"
+        (res_pos, res_name) for ((res_pos, _), res_name) in numbering if res_name != "-"
     ]
 
     for i, (res_pos, res_name) in enumerate(filtered):
