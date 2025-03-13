@@ -119,9 +119,9 @@ class Paratope(Wizard):
 
         self.distance_labels = not self.distance_labels
         if self.distance_labels:
-            cmd.set("label_position", [0.0, 0.0, 1.75])
-        else:
             cmd.set("label_position", [10.0, 0.0, 1.75])
+        else:
+            cmd.set("label_position", [0.0, 0.0, 1.75])
         cmd.refresh_wizard()
 
     def set_molecule(self, molecule):
@@ -181,8 +181,14 @@ class Paratope(Wizard):
             self.molecule, self.selection_name, self.prob_threshold, self.gradient
         )
         try:
-            weights_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "paratope_extra", "parapred_pytorch.h5")
-            self.heatmap.compute_scores(weights_path, self.heavy_chain, self.light_chain)
+            weights_path = os.path.join(
+                pathlib.Path(__file__).parent.resolve(),
+                "paratope_extra",
+                "parapred_pytorch.h5",
+            )
+            self.heatmap.compute_scores(
+                weights_path, self.heavy_chain, self.light_chain
+            )
         except (
             paratope_heatmap.anarci_integration.AnarciError,
             FileNotFoundError,
