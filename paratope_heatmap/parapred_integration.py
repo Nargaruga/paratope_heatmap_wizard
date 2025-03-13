@@ -37,7 +37,7 @@ def score_cdrs(cdrs: list[CDR], weights_path):
     # Map back to CDR sequence; remember that we submitted length-sorted strings
     mapped = [list(zip(sorted_cdr_strings[i], pr)) for i, pr in enumerate(probs)]
 
-    # We need to re-order `mapped` back to the original (unsorted) ordering
+    # We need to re-order `mapped` back to the original ordering
     mapped = [mapped[lookup_cdr[s]] for s in sequences]
 
     # Convert to CDR objects

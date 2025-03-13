@@ -13,7 +13,9 @@ class Paratope(Wizard):
     def __init__(self, _self=cmd):
         Wizard.__init__(self, _self)
         self.heatmap = None
-        self.molecule = None  # the molecule to be used for the heatmap
+        self.molecule = None  # the antibody
+        self.heavy_chain = None  # antibody heavy chain
+        self.light_chain = None  # antibody light chain
         self.selection_name = (
             None  # the name of the selection to be used for the heatmap
         )
@@ -43,6 +45,34 @@ class Paratope(Wizard):
                     1,
                     m,
                     'cmd.get_wizard().set_molecule("' + m + '")',
+                ]
+            )
+
+    def populate_chain_choices(self):
+        """Populate the menu with the available chains in the selected molecule."""
+
+        if self.molecule is None:
+            print("Please select a molecule.")
+            return
+
+        chains = cmd.get_chains(self.molecule)
+        self.menu["heavy_chain"] = [[2, "Heavy Chain", ""]]
+        for c in chains:
+            self.menu["heavy_chain"].append(
+                [
+                    1,
+                    c,
+                    'cmd.get_wizard().set_heavy_chain("' + c + '")',
+                ]
+            )
+
+        self.menu["light_chain"] = [[2, "Light Chain", ""]]
+        for c in chains:
+            self.menu["light_chain"].append(
+                [
+                    1,
+                    c,
+                    'cmd.get_wizard().set_light_chain("' + c + '")',
                 ]
             )
 
@@ -99,6 +129,20 @@ class Paratope(Wizard):
 
         self.molecule = molecule
         self.selection_name = f"{molecule}_paratope"
+        self.populate_chain_choices()
+
+        cmd.refresh_wizard()
+
+    def set_heavy_chain(self, chain):
+        """Set the heavy chain to be used for the heatmap."""
+
+        self.heavy_chain = chain
+        cmd.refresh_wizard()
+
+    def set_light_chain(self, chain):
+        """Set the light chain to be used for the heatmap."""
+
+        self.light_chain = chain
         cmd.refresh_wizard()
 
     def set_selection_name(self, selection_name):
@@ -129,12 +173,16 @@ class Paratope(Wizard):
             print("Please select a molecule.")
             return
 
+        if self.heavy_chain is None or self.light_chain is None:
+            print("Please select both the heavy and light chain.")
+            return
+
         self.heatmap = paratope_heatmap.Heatmap(
             self.molecule, self.selection_name, self.prob_threshold, self.gradient
         )
         try:
             weights_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "paratope_extra", "parapred_pytorch.h5")
-            self.heatmap.compute_scores(weights_path)
+            self.heatmap.compute_scores(weights_path, self.heavy_chain, self.light_chain)
         except (
             paratope_heatmap.anarci_integration.AnarciError,
             FileNotFoundError,
@@ -158,7 +206,17 @@ class Paratope(Wizard):
         else:
             molecule_label = self.molecule
 
-        threshold_label = "Threshold: " + str(self.prob_threshold)
+        if self.heavy_chain is None:
+            heavy_chain_label = "Pick the heavy chain"
+        else:
+            heavy_chain_label = f"Heavy Chain: {self.heavy_chain}"
+
+        if self.light_chain is None:
+            light_chain_label = "Pick the light chain"
+        else:
+            light_chain_label = f"Light Chain: {self.light_chain}"
+
+        threshold_label = f"Threshold: {str(self.prob_threshold)}"
         gradient_label = f"Gradient: {self.gradient}"
         show_labels_label = f"Show Labels: {self.show_labels}"
         distance_labels_label = f"Distance Labels: {self.distance_labels}"
@@ -166,6 +224,8 @@ class Paratope(Wizard):
         return [
             [1, "Paratope Heatmap", ""],
             [3, molecule_label, "molecule"],
+            [3, heavy_chain_label, "heavy_chain"],
+            [3, light_chain_label, "light_chain"],
             [3, threshold_label, "threshold"],
             [3, gradient_label, "gradient"],
             [2, show_labels_label, "cmd.get_wizard().toggle_labels()"],

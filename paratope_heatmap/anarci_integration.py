@@ -1,6 +1,7 @@
 import os
 import subprocess
 import re
+from enum import Enum, auto
 
 from .cdr import CDR, Residue
 
@@ -20,8 +21,14 @@ def parse_line(line: str):
 
     return int(match.group(2)), str(match.group(4))
 
+class ChainType(Enum):
+    HEAVY = auto()
+    LIGHT = auto()
 
-def compute_cdrs(sequence: str, ids: list[int], chain: str) -> list[CDR]:
+
+def compute_cdrs(
+    sequence: str, ids: list[int], chain: str, chain_type: ChainType
+) -> list[CDR]:
     """Computes the CDRs of a given sequence of residues."""
 
     # Use ANARCI to number the input sequence with Chothia scheme
@@ -59,22 +66,20 @@ def compute_cdrs(sequence: str, ids: list[int], chain: str) -> list[CDR]:
         raise AnarciError("ANARCI failed to number the sequence.")
 
     # Store the CDR sequences with two extra residues on each side
-    if chain == "H":
+    if chain_type == ChainType.HEAVY:
         # CDR H1: from 27 to 37
         # CDR H2: from 57 to 64
         # CDR H3: from 107 to 117
         extended_cdr1_range = range(27 - 2, 37 + 3)
         extended_cdr2_range = range(57 - 2, 64 + 3)
         extended_cdr3_range = range(107 - 2, 117 + 3)
-    elif chain == "L":
+    elif chain_type == ChainType.LIGHT:
         # CDR L1: from 24 to 40
         # CDR L2: from 56 to 69
         # CDR L3: from 105 to 117
         extended_cdr1_range = range(24 - 2, 40 + 3)
         extended_cdr2_range = range(56 - 2, 69 + 3)
         extended_cdr3_range = range(105 - 2, 117 + 3)
-    else:
-        raise AnarciError(f"Unrecognized chain {chain}.")
 
     extended_cdrs = [CDR(), CDR(), CDR()]
 

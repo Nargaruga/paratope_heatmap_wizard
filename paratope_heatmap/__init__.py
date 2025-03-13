@@ -32,7 +32,7 @@ class Heatmap:
         self.gradient = gradient  # the color gradient for the heatmap
         self.annotated_cdrs = []  # CDRs annotated with probabilities
 
-    def compute_scores(self, weights_path):
+    def compute_scores(self, weights_path, heavy_chain, light_chain):
         """Compute the probability for each CDR atom to belong to the paratope."""
 
         if not self.molecule_name:
@@ -43,14 +43,14 @@ class Heatmap:
 
         # Identify the CDRs and feed them to Parapred
         h_chain_seq, h_chain_ids = get_sequence_and_ids(
-            f"{self.molecule_name} and chain H"
+            f"{self.molecule_name} and chain {heavy_chain}"
         )
         l_chain_seq, l_chain_ids = get_sequence_and_ids(
-            f"{self.molecule_name} and chain L"
+            f"{self.molecule_name} and chain {light_chain}"
         )
         try:
-            h_cdrs = anarci_integration.compute_cdrs(h_chain_seq, h_chain_ids, "H")
-            l_cdrs = anarci_integration.compute_cdrs(l_chain_seq, l_chain_ids, "L")
+            h_cdrs = anarci_integration.compute_cdrs(h_chain_seq, h_chain_ids, heavy_chain, anarci_integration.ChainType.HEAVY)
+            l_cdrs = anarci_integration.compute_cdrs(l_chain_seq, l_chain_ids, light_chain, anarci_integration.ChainType.LIGHT)
             self.annotated_cdrs = parapred_integration.score_cdrs(h_cdrs + l_cdrs, weights_path)
         except (anarci_integration.AnarciError, FileNotFoundError):
             print("Error: could not compute CDRs or scores.")

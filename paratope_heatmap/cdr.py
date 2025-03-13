@@ -8,7 +8,6 @@ class Residue:
     chain: str
     prob: float
 
-
 @dataclass
 class CDR:
     residues: list[Residue] = field(default_factory=list)
