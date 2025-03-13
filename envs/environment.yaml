@@ -1,0 +1,16 @@
+name: pymol_paratope_heatmap
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - pyyaml
+  - pyqt
+  - python=3.9
+  - glew
+  - libpng
+  - libnetcdf
+  - freetype
+  - glm
+  - biopython
+  - hmmer=3.3.2
