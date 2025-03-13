@@ -58,8 +58,8 @@ def main():
         )
 
         conda_base_path = str(
-                subprocess.check_output("conda info --base", shell=True), "utf-8"
-            ).strip()
+            subprocess.check_output("conda info --base", shell=True), "utf-8"
+        ).strip()
         conda_prefix = os.path.join(conda_base_path, "envs", env_name)
         subprocess.run(
             [
@@ -75,39 +75,51 @@ def main():
             cwd=muscle_dir,
         )
 
-        #TODO: only install if missing
-        print("Installing ANARCI...")
-        anarci_dir = os.path.join(wizard_root, "ext", "ANARCI")
-        subprocess.run(
-            [
-                "conda",
-                "run",
-                "--no-capture-output",
-                "-n",
-                f"{env_name}",
-                "pip",
-                "install",
-                "-r",
-                os.path.join(anarci_dir, "requirements.txt"),
-            ],
-            cwd=anarci_dir,
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [
+                    "conda",
+                    "run",
+                    "--no-capture-output",
+                    "-n",
+                    f"{env_name}",
+                    "ANARCI",
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            print("Installing ANARCI...")
+            anarci_dir = os.path.join(wizard_root, "ext", "ANARCI")
+            subprocess.run(
+                [
+                    "conda",
+                    "run",
+                    "--no-capture-output",
+                    "-n",
+                    f"{env_name}",
+                    "pip",
+                    "install",
+                    "-r",
+                    os.path.join(anarci_dir, "requirements.txt"),
+                ],
+                cwd=anarci_dir,
+                check=True,
+            )
 
-        subprocess.run(
-            [
-                "conda",
-                "run",
-                "--no-capture-output",
-                "-n",
-                f"{env_name}",
-                "python",
-                "setup.py",
-                "install",
-            ],
-            cwd=anarci_dir,
-            check=True,
-        )
+            subprocess.run(
+                [
+                    "conda",
+                    "run",
+                    "--no-capture-output",
+                    "-n",
+                    f"{env_name}",
+                    "python",
+                    "setup.py",
+                    "install",
+                ],
+                cwd=anarci_dir,
+                check=True,
+            )
 
     print("Installing Parapred...")
     parapred_dir = os.path.join(wizard_root, "ext", "parapred-pytorch")
