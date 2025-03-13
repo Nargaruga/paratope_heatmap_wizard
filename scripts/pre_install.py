@@ -156,6 +156,7 @@ def main():
         subprocess.run(
             [
                 "wget",
+                "-nc",
                 "https://github.com/alchemab/parapred-pytorch/raw/refs/tags/v1.0.2/parapred/weights/parapred_pytorch.h5",
                 "-P",
                 "weights",
