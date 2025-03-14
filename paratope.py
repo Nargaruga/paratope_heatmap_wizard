@@ -221,13 +221,13 @@ class Paratope(Wizard):
             molecule_label = self.molecule
 
         heavy_chain_label = "Heavy Chains: "
-        if self.heavy_chains is not None:
+        if self.heavy_chains:
             heavy_chain_label += ", ".join(self.heavy_chains)
         else:
             heavy_chain_label += "None"
 
         light_chain_label = "Light Chains: "
-        if self.light_chains is not None:
+        if self.light_chains:
             light_chain_label += ", ".join(self.light_chains)
         else:
             light_chain_label += "None"
