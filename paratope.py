@@ -4,7 +4,7 @@ import pathlib
 from pymol.wizard import Wizard
 from pymol import cmd
 
-from . import paratope_heatmap
+from .paratope_heatmap import anarci_integration, heatmap
 
 
 class Paratope(Wizard):
@@ -177,7 +177,7 @@ class Paratope(Wizard):
             print("Please select both the heavy and light chain.")
             return
 
-        self.heatmap = paratope_heatmap.Heatmap(
+        self.heatmap = heatmap.Heatmap(
             self.molecule, self.selection_name, self.prob_threshold, self.gradient
         )
         try:
@@ -190,7 +190,7 @@ class Paratope(Wizard):
                 weights_path, self.heavy_chain, self.light_chain
             )
         except (
-            paratope_heatmap.anarci_integration.AnarciError,
+            anarci_integration.AnarciError,
             FileNotFoundError,
         ) as e:
             print(f"Failed to identify paratope: {e}")
