@@ -14,8 +14,8 @@ class Paratope(Wizard):
         Wizard.__init__(self, _self)
         self.heatmap = None
         self.molecule = None  # the antibody
-        self.heavy_chain = None  # antibody heavy chain
-        self.light_chain = None  # antibody light chain
+        self.heavy_chains: list[str] = []  # antibody heavy chain
+        self.light_chains: list[str] = []  # antibody light chain
         self.selection_name = (
             None  # the name of the selection to be used for the heatmap
         )
@@ -136,13 +136,21 @@ class Paratope(Wizard):
     def set_heavy_chain(self, chain):
         """Set the heavy chain to be used for the heatmap."""
 
-        self.heavy_chain = chain
+        if chain in self.heavy_chains:
+            self.heavy_chains.remove(chain)
+        else:
+            self.heavy_chains.append(chain)
+
         cmd.refresh_wizard()
 
     def set_light_chain(self, chain):
         """Set the light chain to be used for the heatmap."""
 
-        self.light_chain = chain
+        if chain in self.light_chains:
+            self.light_chains.remove(chain)
+        else:
+            self.light_chains.append(chain)
+
         cmd.refresh_wizard()
 
     def set_selection_name(self, selection_name):
@@ -173,7 +181,7 @@ class Paratope(Wizard):
             print("Please select a molecule.")
             return
 
-        if self.heavy_chain is None or self.light_chain is None:
+        if self.heavy_chains is None or self.light_chains is None:
             print("Please select both the heavy and light chain.")
             return
 
@@ -187,7 +195,7 @@ class Paratope(Wizard):
                 "parapred_pytorch.h5",
             )
             self.heatmap.compute_scores(
-                weights_path, self.heavy_chain, self.light_chain
+                weights_path, self.heavy_chains, self.light_chains
             )
         except (
             anarci_integration.AnarciError,
@@ -212,15 +220,17 @@ class Paratope(Wizard):
         else:
             molecule_label = self.molecule
 
-        if self.heavy_chain is None:
-            heavy_chain_label = "Pick the heavy chain"
+        heavy_chain_label = "Heavy Chains: "
+        if self.heavy_chains is not None:
+            heavy_chain_label += ", ".join(self.heavy_chains)
         else:
-            heavy_chain_label = f"Heavy Chain: {self.heavy_chain}"
+            heavy_chain_label += "None"
 
-        if self.light_chain is None:
-            light_chain_label = "Pick the light chain"
+        light_chain_label = "Light Chains: "
+        if self.light_chains is not None:
+            light_chain_label += ", ".join(self.light_chains)
         else:
-            light_chain_label = f"Light Chain: {self.light_chain}"
+            light_chain_label += "None"
 
         threshold_label = f"Threshold: {str(self.prob_threshold)}"
         gradient_label = f"Gradient: {self.gradient}"

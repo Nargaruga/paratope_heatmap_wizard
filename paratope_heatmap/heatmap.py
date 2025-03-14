@@ -4,18 +4,15 @@ from .anarci_integration import compute_cdrs, ChainType, AnarciError
 from .parapred_integration import score_cdrs
 
 
-def get_sequence_and_ids(selection: str) -> tuple[str, list[int]]:
+def get_residues(selection: str) -> list[tuple[str, int]]:
     """Returns the sequence of the selection along with the residue IDs."""
-    fasta_str = cmd.get_fastastr(selection)
-    # Remove the header line and join the rows
-    sequence = "".join(fasta_str.split("\n")[1:])
-    # Get the list of residues and their IDs from the selection
-    res_ids = []
-    cmd.iterate(selection, "res_ids.append((resi))", space=locals())
-    # Remove duplicates residue ids (as "iterate" iterates over all atoms, not residues)
-    res_ids = list(dict.fromkeys(res_ids))
 
-    return sequence, res_ids
+    residues = []
+    cmd.iterate(
+        f"{selection} and name CA", "residues.append((oneletter, resi))", space=locals()
+    )
+
+    return residues
 
 
 class Heatmap:
@@ -30,29 +27,26 @@ class Heatmap:
         self.gradient = gradient  # the color gradient for the heatmap
         self.annotated_cdrs = []  # CDRs annotated with probabilities
 
-    def compute_scores(self, weights_path, heavy_chain, light_chain):
+    def compute_scores(self, weights_path, h_chain_ids, l_chain_ids):
         """Compute the probability for each CDR atom to belong to the paratope."""
 
         if not self.molecule_name:
             print("Error: molecule name not provided.")
             return
 
-        print("Computing scores...")
-
         # Identify the CDRs and feed them to Parapred
-        h_chain_seq, h_chain_ids = get_sequence_and_ids(
-            f"{self.molecule_name} and chain {heavy_chain}"
-        )
-        l_chain_seq, l_chain_ids = get_sequence_and_ids(
-            f"{self.molecule_name} and chain {light_chain}"
-        )
+        print("Computing scores...")
         try:
-            h_cdrs = compute_cdrs(
-                h_chain_seq, h_chain_ids, heavy_chain, ChainType.HEAVY
-            )
-            l_cdrs = compute_cdrs(
-                l_chain_seq, l_chain_ids, light_chain, ChainType.LIGHT
-            )
+            h_cdrs = []
+            for id in h_chain_ids:
+                chain_residues = get_residues(f"{self.molecule_name} and chain {id}")
+                h_cdrs += compute_cdrs(chain_residues, id, ChainType.HEAVY)
+
+            l_cdrs = []
+            for id in l_chain_ids:
+                chain_residues = get_residues(f"{self.molecule_name} and chain {id}")
+                l_cdrs += compute_cdrs(chain_residues, id, ChainType.LIGHT)
+
             self.annotated_cdrs = score_cdrs(h_cdrs + l_cdrs, weights_path)
         except (AnarciError, FileNotFoundError):
             print("Error: could not compute CDRs or scores.")

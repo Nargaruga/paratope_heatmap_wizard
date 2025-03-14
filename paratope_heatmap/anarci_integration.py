@@ -21,15 +21,20 @@ def parse_line(line: str):
 
     return int(match.group(2)), str(match.group(4))
 
+
 class ChainType(Enum):
     HEAVY = auto()
     LIGHT = auto()
 
 
 def compute_cdrs(
-    sequence: str, ids: list[int], chain: str, chain_type: ChainType
+    residues: list[tuple[str, int]], chain: str, chain_type: ChainType
 ) -> list[CDR]:
     """Computes the CDRs of a given sequence of residues."""
+
+    # Residues are in the form (residue_name, residue_id)
+    sequence = "".join([res[0] for res in residues])
+    ids = [res[1] for res in residues]
 
     # Use ANARCI to number the input sequence with Chothia scheme
     if os.name == "nt":
