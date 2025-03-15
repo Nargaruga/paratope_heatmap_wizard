@@ -1,6 +1,6 @@
 from pymol import cmd
 
-from .anarci_integration import compute_cdrs, ChainType, AnarciError
+from .anarci_integration import compute_cdrs, ChainType
 from .parapred_integration import score_cdrs
 
 
@@ -36,21 +36,17 @@ class Heatmap:
 
         # Identify the CDRs and feed them to Parapred
         print("Computing scores...")
-        try:
-            h_cdrs = []
-            for id in h_chain_ids:
-                chain_residues = get_residues(f"{self.molecule_name} and chain {id}")
-                h_cdrs += compute_cdrs(chain_residues, id, ChainType.HEAVY)
+        h_cdrs = []
+        for id in h_chain_ids:
+            chain_residues = get_residues(f"{self.molecule_name} and chain {id}")
+            h_cdrs += compute_cdrs(chain_residues, id, ChainType.HEAVY)
 
-            l_cdrs = []
-            for id in l_chain_ids:
-                chain_residues = get_residues(f"{self.molecule_name} and chain {id}")
-                l_cdrs += compute_cdrs(chain_residues, id, ChainType.LIGHT)
+        l_cdrs = []
+        for id in l_chain_ids:
+            chain_residues = get_residues(f"{self.molecule_name} and chain {id}")
+            l_cdrs += compute_cdrs(chain_residues, id, ChainType.LIGHT)
 
-            self.annotated_cdrs = score_cdrs(h_cdrs + l_cdrs, weights_path)
-        except (AnarciError, FileNotFoundError):
-            print("Error: could not compute CDRs or scores.")
-            raise
+        self.annotated_cdrs = score_cdrs(h_cdrs + l_cdrs, weights_path)
 
     def create_heatmap(self):
         """Displays the heatmap on the protein structure."""

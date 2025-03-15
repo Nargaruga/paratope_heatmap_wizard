@@ -68,7 +68,7 @@ def compute_cdrs(
         numbering, _ = number(sequence, scheme="imgt")
 
     if numbering is False or len(numbering) == 0:
-        raise AnarciError("ANARCI failed to number the sequence.")
+        raise AnarciError("ANARCI failed to number the sequence")
 
     # Store the CDR sequences with two extra residues on each side
     if chain_type == ChainType.HEAVY:

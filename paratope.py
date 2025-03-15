@@ -194,6 +194,7 @@ class Paratope(Wizard):
                 "paratope_extra",
                 "parapred_pytorch.h5",
             )
+
             self.heatmap.compute_scores(
                 weights_path, self.heavy_chains, self.light_chains
             )
