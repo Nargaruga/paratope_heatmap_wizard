@@ -28,6 +28,7 @@ class Paratope(Wizard):
         self.prob_threshold = (
             0.8  # residues with probability below this threshold will not be labeled
         )
+        self.highlight = True
         self.gradient = "red_green"  # the color gradient for the heatmap
 
         self.populate_molecule_choices()
@@ -153,6 +154,11 @@ class Paratope(Wizard):
 
         cmd.refresh_wizard()
 
+    def set_highlight(self, highlight):
+        """Set whether to highlight the paratope on the protein structure."""
+
+        self.highlight = highlight
+
     def set_selection_name(self, selection_name):
         """Set the name of the selection to be used for the heatmap."""
 
@@ -206,9 +212,9 @@ class Paratope(Wizard):
             raise
 
         cmd.show_as("licorice", self.molecule)
-        # TODO: avoid doing 3 separate loops
-        self.heatmap.create_heatmap()
-        self.heatmap.create_labels()
+        if self.highlight:
+            self.heatmap.create_heatmap()
+            self.heatmap.create_labels()
         self.heatmap.select_paratope()
 
         cmd.refresh_wizard()
