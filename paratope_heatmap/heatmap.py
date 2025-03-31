@@ -104,9 +104,6 @@ class Heatmap:
                     merge=1,
                 )
 
-        cmd.zoom(self.selection_name, animate=1)
-        cmd.orient(self.selection_name, animate=1)
-
     def update_threshold(self, threshold):
         """Update the probability threshold and redraw the labels."""
         self.prob_threshold = threshold
