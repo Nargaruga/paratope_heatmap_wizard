@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+import shutil
 import subprocess
 
 
@@ -17,7 +18,8 @@ def main():
         # install muscle manually
         print("Installing MUSCLE...")
         muscle_dir = os.path.join(wizard_root, "ext", "muscle")
-        Path(muscle_dir).mkdir(exist_ok=True)
+        shutil.rmtree(Path(muscle_dir))
+        Path(muscle_dir).mkdir()
         subprocess.run(
             [
                 "conda",
@@ -29,32 +31,26 @@ def main():
                 "https://www.drive5.com/muscle/muscle_src_3.8.1551.tar.gz",
             ],
             cwd=muscle_dir,
+            check=True,
         )
 
         subprocess.run(
             [
-                "conda",
-                "run",
-                "--no-capture-output",
-                "-n",
-                f"{env_name}",
                 "tar",
                 "xzvf",
                 "muscle_src_3.8.1551.tar.gz",
             ],
             cwd=muscle_dir,
+            check=True,
         )
 
+        os.remove(os.path.join(muscle_dir, "muscle_src_3.8.1551.tar.gz"))
+
         subprocess.run(
-            [
-                "conda",
-                "run",
-                "--no-capture-output",
-                "-n",
-                f"{env_name}",
-                "make",
-            ],
+            f"conda run --no-capture-output -n {env_name} make",
             cwd=muscle_dir,
+            shell=True,
+            check=True,
         )
 
         conda_base_path = str(
@@ -73,6 +69,7 @@ def main():
                 os.path.join(conda_prefix, "bin"),
             ],
             cwd=muscle_dir,
+            check=True,
         )
 
         try:
@@ -174,7 +171,15 @@ def main():
         )
     else:
         subprocess.run(
-            ["make", "install"],
+            [
+                "conda",
+                "run",
+                "--no-capture-output",
+                "-n",
+                env_name,
+                "make",
+                "install",
+            ],
             cwd=parapred_dir,
             check=True,
         )
