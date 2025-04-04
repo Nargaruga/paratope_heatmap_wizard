@@ -120,51 +120,23 @@ def main():
 
     print("Installing Parapred...")
     parapred_dir = os.path.join(wizard_root, "ext", "parapred-pytorch")
+
     subprocess.run(
         prefix
         + [
             "conda",
-            "run",
-            "--no-capture-output",
-            "-n",
-            env_name,
-            "pip",
-            "install",
-            "-r",
-            os.path.join(parapred_dir, "requirements.txt"),
-        ],
-        cwd=parapred_dir,
-        check=True,
+            "env",
+            "create",
+            "--name",
+            "parapred",
+            "--file",
+            os.path.join(parapred_dir, "environment.yml"),
+        ]
     )
 
     if os.name == "nt":
         subprocess.run(
-            [
-                "powershell.exe",
-                "Invoke-WebRequest",
-                "-Uri",
-                "https://github.com/alchemab/parapred-pytorch/raw/refs/tags/v1.0.2/parapred/weights/parapred_pytorch.h5",
-                "-OutFile",
-                os.path.join(wizard_root, "weights", "parapred_pytorch.h5"),
-            ],
-            check=True,
-        )
-    else:
-        subprocess.run(
-            [
-                "wget",
-                "-nc",
-                "https://github.com/alchemab/parapred-pytorch/raw/refs/tags/v1.0.2/parapred/weights/parapred_pytorch.h5",
-                "-P",
-                "weights",
-            ],
-            cwd=wizard_root,
-            check=True,
-        )
-
-    if os.name == "nt":
-        subprocess.run(
-            'C:\\cygwin64\\bin\\bash -c "export PATH=/bin:/usr/bin:$PATH && make install"',
+            'conda run --name parapred C:\\cygwin64\\bin\\bash -c "export PATH=/bin:/usr/bin:$PATH && make install"',
             cwd=parapred_dir,
             shell=True,
             check=True,
@@ -175,8 +147,8 @@ def main():
                 "conda",
                 "run",
                 "--no-capture-output",
-                "-n",
-                env_name,
+                "--name",
+                "parapred",
                 "make",
                 "install",
             ],

@@ -9,7 +9,7 @@ openvr_version: 1.0.17
 
 extra_dirs:
     - [paratope_heatmap, paratope_heatmap]
-    - [weights, paratope_extra]
+    - [ext/parapred-pytorch, paratope_extra/parapred-pytorch]
 
 pre_script: "scripts/pre_install.py"
 post_script: ""
