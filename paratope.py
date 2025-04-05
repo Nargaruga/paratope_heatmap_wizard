@@ -195,14 +195,14 @@ class Paratope(Wizard):
             self.molecule, self.selection_name, self.prob_threshold, self.gradient
         )
         try:
-            weights_path = os.path.join(
+            parapred_dir = os.path.join(
                 pathlib.Path(__file__).parent.resolve(),
                 "paratope_extra",
-                "parapred_pytorch.h5",
+                "parapred-pytorch",
             )
 
             self.heatmap.compute_scores(
-                weights_path, self.heavy_chains, self.light_chains
+                parapred_dir, self.heavy_chains, self.light_chains
             )
         except (
             anarci_integration.AnarciError,

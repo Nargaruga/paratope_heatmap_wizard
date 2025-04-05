@@ -1,7 +1,7 @@
 from pymol import cmd
 
 from .anarci_integration import compute_cdrs, ChainType
-from .parapred_integration import score_cdrs
+from .parapred_integration import score_cdr
 
 
 def get_residues(selection: str) -> list[tuple[str, int]]:
@@ -27,7 +27,7 @@ class Heatmap:
         self.gradient = gradient  # the color gradient for the heatmap
         self.annotated_cdrs = []  # CDRs annotated with probabilities
 
-    def compute_scores(self, weights_path, h_chain_ids, l_chain_ids):
+    def compute_scores(self, parapred_dir, h_chain_ids, l_chain_ids):
         """Compute the probability for each CDR atom to belong to the paratope."""
 
         if not self.molecule_name:
@@ -46,7 +46,9 @@ class Heatmap:
             chain_residues = get_residues(f"{self.molecule_name} and chain {id}")
             l_cdrs += compute_cdrs(chain_residues, id, ChainType.LIGHT)
 
-        self.annotated_cdrs = score_cdrs(h_cdrs + l_cdrs, weights_path)
+        self.annotated_cdrs = []
+        for cdr in h_cdrs + l_cdrs:
+            self.annotated_cdrs.append(score_cdr(cdr, parapred_dir))
 
     def create_heatmap(self):
         """Displays the heatmap on the protein structure."""
@@ -62,6 +64,7 @@ class Heatmap:
                     f"%{self.molecule_name} and chain {residue.chain} and resi {residue.id}",
                     f"b = {score_int}",
                 )
+
                 if score_int > 50:
                     cmd.select(
                         "to_color",
@@ -69,6 +72,7 @@ class Heatmap:
                         merge=1,
                     )
 
+        # TODO check that the selection is not empty
         cmd.spectrum("b", self.gradient, "to_color", 50, 100)
         cmd.delete("to_color")
 

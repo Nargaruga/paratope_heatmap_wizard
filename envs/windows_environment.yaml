@@ -4,13 +4,13 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - numpy>=2.0
   - pyyaml
   - pyqt
-  - python=3.9
+  - python=3.10
   - glew
   - libpng
   - libnetcdf
   - freetype
   - glm
   - biopython
-  - hmmer=3.3.2

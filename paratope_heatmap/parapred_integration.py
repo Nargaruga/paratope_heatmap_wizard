@@ -1,48 +1,55 @@
-import torch
-from parapred.model import Parapred, clean_output
-from parapred.cnn import generate_mask
-from parapred.preprocessing import encode_batch
-
+import os
+import subprocess
+import tempfile
+import json
 from .cdr import CDR
 
 
-def score_cdrs(cdrs: list[CDR], weights_path):
+def read_parapred_output(output_file) -> list[str, float]:
+    """Parses the output of Parapred."""
+
+    try:
+        data = json.load(output_file)
+    except json.JSONDecodeError:
+        print(f"Error decoding JSON Parapred output: {output_file}")
+        raise
+
+    return list(data.values())[0]
+
+
+def score_cdr(cdr: CDR, parapred_dir: str) -> CDR:
     """Computes the probability for each CDR atom to be part of the paratope."""
 
-    sequences = [cdr.get_sequence() for cdr in cdrs]
+    parapred_output = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
 
-    # PyTorch's pack padded sequence function requires length sorting from longest to shortest
-    sorted_cdr_strings = [
-        cdr for cdr in sorted(sequences, key=lambda z: len(z), reverse=True)
-    ]
-    lookup_cdr = dict([(v, i) for i, v in enumerate(sorted_cdr_strings)])
+    if os.name == "nt":
+        prefix = ["powershell.exe"]
+    else:
+        prefix = ""
 
-    # Encoded is a tensor of (batch_size x features x max_length). So is mask.
-    encoded, lengths = encode_batch(sorted_cdr_strings, max_length=40)
-    mask = generate_mask(encoded, lengths)
+    subprocess.run(
+        prefix
+        + [
+            "conda",
+            "run",
+            "--no-capture-output",
+            "--name",
+            "parapred",
+            "python",
+            "cli.py",
+            "predict",
+            cdr.get_sequence(),
+            "-o",
+            parapred_output.name,
+        ],
+        cwd=parapred_dir,
+    )
 
-    # Initialise the model and load pretrained weights
-    model = Parapred()
-    model.load_state_dict(torch.load(weights_path))
+    annotated_sequence = read_parapred_output(parapred_output)
+    for i, residue in enumerate(cdr.residues):
+        residue.prob = annotated_sequence[i][1]
 
-    # Trigger evaluation mode and don't allow gradients to move around
-    _ = model.eval()
-    with torch.no_grad():
-        probs = model(encoded, mask, lengths)
+    parapred_output.close()
+    os.remove(parapred_output.name)
 
-    # This cleans up probabilities that would have been predicted for the
-    # padded positions, which we should ignore.
-    probs = [clean_output(pr, lengths[i]).tolist() for i, pr in enumerate(probs)]
-
-    # Map back to CDR sequence; remember that we submitted length-sorted strings
-    mapped = [list(zip(sorted_cdr_strings[i], pr)) for i, pr in enumerate(probs)]
-
-    # We need to re-order `mapped` back to the original ordering
-    mapped = [mapped[lookup_cdr[s]] for s in sequences]
-
-    # Convert to CDR objects
-    for i, cdr in enumerate(cdrs):
-        for j, res in enumerate(cdr.residues):
-            res.prob = mapped[i][j][1]
-
-    return cdrs
+    return cdr
