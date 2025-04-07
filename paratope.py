@@ -4,7 +4,7 @@ import pathlib
 from pymol.wizard import Wizard
 from pymol import cmd
 
-from .paratope_heatmap import anarci_integration, heatmap
+from paratope_heatmap import anarci_integration, heatmap
 
 
 class Paratope(Wizard):

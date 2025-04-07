@@ -2,6 +2,7 @@
 .vscode
 *.cif
 
+build/
 ext/muscle
 weights/
 tmp/
