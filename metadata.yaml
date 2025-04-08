@@ -7,9 +7,5 @@ python_version: 3.10
 pymol_version: master
 openvr_version: 1.0.17
 
-extra_dirs:
-    - [paratope_heatmap, paratope_heatmap]
-    - [ext/parapred-pytorch, paratope_extra/parapred-pytorch]
-
 pre_script: "scripts/pre_install.py"
 post_script: ""
