@@ -5,6 +5,3 @@
 	path = ext/parapred-pytorch
 	url = git@github.com:alchemab/parapred-pytorch.git
 	branch = v1.0.2
-[submodule "ext/pymol_wizard_installer"]
-	path = ext/pymol_wizard_installer
-	url = git@github.com:Nargaruga/pymol_wizard_installer.git
