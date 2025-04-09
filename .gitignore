@@ -1,6 +1,7 @@
 *__pycache__
 .vscode
 *.cif
+*.egg-info
 
 build/
 ext/muscle
