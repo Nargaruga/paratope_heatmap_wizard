@@ -14,64 +14,6 @@ def main():
     else:
         prefix = []
 
-    if os.name != "nt":
-        # install muscle manually
-        print("Installing MUSCLE...")
-        muscle_dir = os.path.join(wizard_root, "ext", "muscle")
-        shutil.rmtree(Path(muscle_dir))
-        Path(muscle_dir).mkdir()
-        subprocess.run(
-            [
-                "conda",
-                "run",
-                "--no-capture-output",
-                "-n",
-                f"{env_name}",
-                "wget",
-                "https://www.drive5.com/muscle/muscle_src_3.8.1551.tar.gz",
-            ],
-            cwd=muscle_dir,
-            check=True,
-        )
-
-        subprocess.run(
-            [
-                "tar",
-                "xzvf",
-                "muscle_src_3.8.1551.tar.gz",
-            ],
-            cwd=muscle_dir,
-            check=True,
-        )
-
-        os.remove(os.path.join(muscle_dir, "muscle_src_3.8.1551.tar.gz"))
-
-        subprocess.run(
-            f"conda run --no-capture-output -n {env_name} make",
-            cwd=muscle_dir,
-            shell=True,
-            check=True,
-        )
-
-        conda_base_path = str(
-            subprocess.check_output("conda info --base", shell=True), "utf-8"
-        ).strip()
-        conda_prefix = os.path.join(conda_base_path, "envs", env_name)
-        subprocess.run(
-            [
-                "conda",
-                "run",
-                "--no-capture-output",
-                "-n",
-                f"{env_name}",
-                "cp",
-                "muscle",
-                os.path.join(conda_prefix, "bin"),
-            ],
-            cwd=muscle_dir,
-            check=True,
-        )
-
         try:
             subprocess.run(
                 [
@@ -83,8 +25,68 @@ def main():
                     "ANARCI",
                 ],
                 check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
         except subprocess.CalledProcessError:
+            if os.name == "posix":
+                # install muscle manually
+                print("Installing MUSCLE...")
+                muscle_dir = os.path.join(wizard_root, "ext", "muscle")
+                shutil.rmtree(Path(muscle_dir))
+                Path(muscle_dir).mkdir()
+                subprocess.run(
+                    [
+                        "conda",
+                        "run",
+                        "--no-capture-output",
+                        "-n",
+                        f"{env_name}",
+                        "wget",
+                        "https://www.drive5.com/muscle/muscle_src_3.8.1551.tar.gz",
+                    ],
+                    cwd=muscle_dir,
+                    check=True,
+                )
+
+                subprocess.run(
+                    [
+                        "tar",
+                        "xzvf",
+                        "muscle_src_3.8.1551.tar.gz",
+                    ],
+                    cwd=muscle_dir,
+                    check=True,
+                )
+
+                os.remove(os.path.join(muscle_dir, "muscle_src_3.8.1551.tar.gz"))
+
+                subprocess.run(
+                    f"conda run --no-capture-output -n {env_name} make",
+                    cwd=muscle_dir,
+                    shell=True,
+                    check=True,
+                )
+
+                conda_base_path = str(
+                    subprocess.check_output("conda info --base", shell=True), "utf-8"
+                ).strip()
+                conda_prefix = os.path.join(conda_base_path, "envs", env_name)
+                subprocess.run(
+                    [
+                        "conda",
+                        "run",
+                        "--no-capture-output",
+                        "-n",
+                        f"{env_name}",
+                        "cp",
+                        "muscle",
+                        os.path.join(conda_prefix, "bin"),
+                    ],
+                    cwd=muscle_dir,
+                    check=True,
+                )
+
             print("Installing ANARCI...")
             anarci_dir = os.path.join(wizard_root, "ext", "ANARCI")
             subprocess.run(
@@ -118,43 +120,62 @@ def main():
                 check=True,
             )
 
-    print("Installing Parapred...")
     parapred_dir = os.path.join(wizard_root, "ext", "parapred-pytorch")
+    try:
+        if os.name == "nt":
+            prefix = ["powershell.exe"]
+        else:
+            prefix = []
 
-    subprocess.run(
-        prefix
-        + [
-            "conda",
-            "env",
-            "create",
-            "--name",
-            "parapred",
-            "--file",
-            os.path.join(parapred_dir, "environment.yml"),
-        ]
-    )
-
-    if os.name == "nt":
         subprocess.run(
-            'conda run --name parapred C:\\cygwin64\\bin\\bash -c "export PATH=/bin:/usr/bin:$PATH && make install"',
-            cwd=parapred_dir,
-            shell=True,
-            check=True,
-        )
-    else:
-        subprocess.run(
-            [
+            prefix
+            + [
                 "conda",
-                "run",
-                "--no-capture-output",
+                "list",
                 "--name",
                 "parapred",
-                "make",
-                "install",
             ],
-            cwd=parapred_dir,
             check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
+    except subprocess.CalledProcessError:
+        print("Installing Parapred...")
+
+        subprocess.run(
+            prefix
+            + [
+                "conda",
+                "env",
+                "create",
+                "--name",
+                "parapred",
+                "--file",
+                os.path.join(parapred_dir, "environment.yml"),
+            ]
+        )
+
+        if os.name == "nt":
+            subprocess.run(
+                'conda run --name parapred C:\\cygwin64\\bin\\bash -c "export PATH=/bin:/usr/bin:$PATH && make install"',
+                cwd=parapred_dir,
+                shell=True,
+                check=True,
+            )
+        else:
+            subprocess.run(
+                [
+                    "conda",
+                    "run",
+                    "--no-capture-output",
+                    "--name",
+                    "parapred",
+                    "make",
+                    "install",
+                ],
+                cwd=parapred_dir,
+                check=True,
+            )
 
 
 if __name__ == "__main__":
