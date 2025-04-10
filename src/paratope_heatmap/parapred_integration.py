@@ -25,7 +25,7 @@ def score_cdr(cdr: CDR, parapred_dir: str) -> CDR:
     if os.name == "nt":
         prefix = ["powershell.exe"]
     else:
-        prefix = ""
+        prefix = []
 
     subprocess.run(
         prefix
@@ -47,7 +47,7 @@ def score_cdr(cdr: CDR, parapred_dir: str) -> CDR:
 
     annotated_sequence = read_parapred_output(parapred_output)
     for i, residue in enumerate(cdr.residues):
-        residue.prob = annotated_sequence[i][1]
+        residue.prob = float(annotated_sequence[i][1])
 
     parapred_output.close()
     os.remove(parapred_output.name)
