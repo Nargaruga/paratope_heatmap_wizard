@@ -29,11 +29,9 @@ class Paratope(Wizard):
             0.8  # residues with probability below this threshold will not be labeled
         )
         self.highlight = True
-        self.gradient = "red_green"  # the color gradient for the heatmap
 
         self.populate_molecule_choices()
         self.populate_threshold_choices()
-        self.populate_gradient_choices()
 
     def populate_molecule_choices(self):
         """Populate the menu with the available molecules in the session."""
@@ -88,20 +86,6 @@ class Paratope(Wizard):
                     1,
                     str(threshold),
                     "cmd.get_wizard().set_threshold(" + str(threshold) + ")",
-                ]
-            )
-
-    def populate_gradient_choices(self):
-        """Populate the menu with the available gradient choices."""
-
-        self.menu["gradient"] = [[2, "Gradient", ""]]
-        gradients = ["red_green", "grey_green"]
-        for gradient in gradients:
-            self.menu["gradient"].append(
-                [
-                    1,
-                    gradient,
-                    "cmd.get_wizard().set_gradient('" + gradient + "')",
                 ]
             )
 
@@ -172,14 +156,6 @@ class Paratope(Wizard):
             self.heatmap.update_threshold(threshold)
         cmd.refresh_wizard()
 
-    def set_gradient(self, gradient):
-        """Set the color gradient for the heatmap."""
-
-        self.gradient = gradient
-        if self.heatmap is not None:
-            self.heatmap.update_gradient(gradient)
-        cmd.refresh_wizard()
-
     def run(self):
         """Compute and visualize the paratope heatmap on the selected molecule."""
 
@@ -192,7 +168,7 @@ class Paratope(Wizard):
             return
 
         self.heatmap = heatmap.Heatmap(
-            self.molecule, self.selection_name, self.prob_threshold, self.gradient
+            self.molecule, self.selection_name, self.prob_threshold
         )
         try:
             parapred_dir = os.path.join(
@@ -240,7 +216,6 @@ class Paratope(Wizard):
             light_chain_label += "None"
 
         threshold_label = f"Threshold: {str(self.prob_threshold)}"
-        gradient_label = f"Gradient: {self.gradient}"
         show_labels_label = f"Show Labels: {self.show_labels}"
         distance_labels_label = f"Distance Labels: {self.distance_labels}"
 
@@ -250,7 +225,6 @@ class Paratope(Wizard):
             [3, heavy_chain_label, "heavy_chain"],
             [3, light_chain_label, "light_chain"],
             [3, threshold_label, "threshold"],
-            [3, gradient_label, "gradient"],
             [2, show_labels_label, "cmd.get_wizard().toggle_labels()"],
             [2, distance_labels_label, "cmd.get_wizard().toggle_label_pos()"],
             [2, "Run", "cmd.get_wizard().run()"],
