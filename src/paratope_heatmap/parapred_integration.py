@@ -17,7 +17,7 @@ def read_parapred_output(output_file) -> list[str, float]:
     return list(data.values())[0]
 
 
-def score_cdr(cdr: CDR, parapred_dir: str) -> CDR:
+def score_cdr(cdr: CDR) -> CDR:
     """Computes the probability for each CDR atom to be part of the paratope."""
 
     parapred_output = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
@@ -27,6 +27,8 @@ def score_cdr(cdr: CDR, parapred_dir: str) -> CDR:
     else:
         prefix = []
 
+    print(f"Sequence: {cdr.get_sequence()}")
+
     subprocess.run(
         prefix
         + [
@@ -35,14 +37,12 @@ def score_cdr(cdr: CDR, parapred_dir: str) -> CDR:
             "--no-capture-output",
             "--name",
             "parapred",
-            "python",
-            "cli.py",
+            "parapred",
             "predict",
             cdr.get_sequence(),
             "-o",
             parapred_output.name,
         ],
-        cwd=parapred_dir,
     )
 
     annotated_sequence = read_parapred_output(parapred_output)

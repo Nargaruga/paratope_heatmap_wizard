@@ -26,7 +26,7 @@ class Heatmap:
         self.selection_name = selection_name  # the selection name for the paratope
         self.annotated_cdrs = []  # CDRs annotated with probabilities
 
-    def compute_scores(self, parapred_dir, h_chain_ids, l_chain_ids):
+    def compute_scores(self, h_chain_ids, l_chain_ids):
         """Compute the probability for each CDR atom to belong to the paratope."""
 
         if not self.molecule_name:
@@ -47,7 +47,7 @@ class Heatmap:
 
         self.annotated_cdrs = []
         for cdr in h_cdrs + l_cdrs:
-            self.annotated_cdrs.append(score_cdr(cdr, parapred_dir))
+            self.annotated_cdrs.append(score_cdr(cdr))
 
     def create_heatmap(self):
         """Displays the heatmap on the protein structure."""

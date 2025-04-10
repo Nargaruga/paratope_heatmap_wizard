@@ -196,14 +196,8 @@ class Paratope(Wizard):
             self.molecule, self.selection_name, self.prob_threshold
         )
         try:
-            parapred_dir = os.path.join(
-                pathlib.Path(__file__).parent.resolve(),
-                "paratope_extra",
-                "parapred-pytorch",
-            )
-
             self.heatmap.compute_scores(
-                parapred_dir, self.heavy_chains, self.light_chains
+                self.heavy_chains, self.light_chains
             )
         except (
             anarci_integration.AnarciError,
