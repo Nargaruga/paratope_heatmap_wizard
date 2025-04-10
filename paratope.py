@@ -1,5 +1,6 @@
 import os
 import pathlib
+from enum import IntEnum, auto
 
 from pymol.wizard import Wizard
 from pymol import cmd
@@ -7,11 +8,23 @@ from pymol import cmd
 from paratope_heatmap import anarci_integration, heatmap
 
 
+class WizardState(IntEnum):
+    """The possible states of the wizard."""
+
+    INITIALIZING = auto()
+    READY = auto()
+    MOLECULE_SELECTED = auto()
+    CHAINS_SELECTED = auto()
+    IDENTIFYING_PARATOPE = auto()
+    PARATOPE_IDENTIFIED = auto()
+
+
 class Paratope(Wizard):
     """Wizard for displaying the paratope heatmap on a protein structure."""
 
     def __init__(self, _self=cmd):
         Wizard.__init__(self, _self)
+        self.state = WizardState.INITIALIZING
         self.heatmap = None
         self.molecule = None  # the antibody
         self.heavy_chains: list[str] = []  # antibody heavy chain
@@ -32,6 +45,8 @@ class Paratope(Wizard):
 
         self.populate_molecule_choices()
         self.populate_threshold_choices()
+
+        self.state = WizardState.READY
 
     def populate_molecule_choices(self):
         """Populate the menu with the available molecules in the session."""
@@ -116,6 +131,8 @@ class Paratope(Wizard):
         self.selection_name = f"{molecule}_paratope"
         self.populate_chain_choices()
 
+        self.state = WizardState.MOLECULE_SELECTED
+
         cmd.refresh_wizard()
 
     def set_heavy_chain(self, chain):
@@ -126,6 +143,9 @@ class Paratope(Wizard):
         else:
             self.heavy_chains.append(chain)
 
+        if self.heavy_chains and self.light_chains:
+            self.state = WizardState.CHAINS_SELECTED
+
         cmd.refresh_wizard()
 
     def set_light_chain(self, chain):
@@ -135,6 +155,9 @@ class Paratope(Wizard):
             self.light_chains.remove(chain)
         else:
             self.light_chains.append(chain)
+
+        if self.heavy_chains and self.light_chains:
+            self.state = WizardState.CHAINS_SELECTED
 
         cmd.refresh_wizard()
 
@@ -167,6 +190,8 @@ class Paratope(Wizard):
             print("Please select both the heavy and light chain.")
             return
 
+        self.state = WizardState.IDENTIFYING_PARATOPE
+
         self.heatmap = heatmap.Heatmap(
             self.molecule, self.selection_name, self.prob_threshold
         )
@@ -185,6 +210,7 @@ class Paratope(Wizard):
             FileNotFoundError,
         ) as e:
             print(f"Failed to identify paratope: {e}")
+            self.state = WizardState.CHAINS_SELECTED
             raise
 
         cmd.show_as("licorice", self.molecule)
@@ -193,40 +219,82 @@ class Paratope(Wizard):
             self.heatmap.create_labels()
         self.heatmap.select_paratope()
 
+        self.state = WizardState.PARATOPE_IDENTIFIED
+
         cmd.refresh_wizard()
 
-    def get_panel(self):
+    def get_prompt(self):  # type: ignore
+        """Return the prompt for the current state of the wizard."""
+
+        self.prompt = []
+        if self.state == WizardState.INITIALIZING:
+            self.prompt.append("Initializing, please wait...")
+        elif self.state == WizardState.READY:
+            self.prompt.append("Select a molecule.")
+        elif self.state == WizardState.MOLECULE_SELECTED:
+            self.prompt.append("Select light and heavy chains.")
+        elif self.state == WizardState.CHAINS_SELECTED:
+            self.prompt.append(
+                f"Run to identify the paratope for {self.molecule} on chains {self.heavy_chains} and {self.light_chains}."
+            )
+        elif self.state == WizardState.IDENTIFYING_PARATOPE:
+            self.prompt.append("Locating paratope, please wait...")
+        elif self.state == WizardState.PARATOPE_IDENTIFIED:
+            self.prompt.append("Done.")
+
+        return self.prompt
+
+    def get_panel(self):  # type: ignore
         """Return the menu panel for the wizard."""
 
-        if self.molecule is None:
-            molecule_label = "Choose molecule"
-        else:
-            molecule_label = self.molecule
+        # Title
+        options = [1, "Paratope Heatmap", ""]
 
-        heavy_chain_label = "Heavy Chains: "
-        if self.heavy_chains:
-            heavy_chain_label += ", ".join(self.heavy_chains)
-        else:
-            heavy_chain_label += "None"
+        # Molecule list
+        if self.state >= WizardState.READY:
+            if self.molecule is None:
+                molecule_label = "Choose molecule"
+            else:
+                molecule_label = self.molecule
 
-        light_chain_label = "Light Chains: "
-        if self.light_chains:
-            light_chain_label += ", ".join(self.light_chains)
-        else:
-            light_chain_label += "None"
+            options.append([3, molecule_label, "molecule"])
 
+        # Chain lists
+        if self.state >= WizardState.MOLECULE_SELECTED:
+            heavy_chain_label = "Heavy Chains: "
+            if self.heavy_chains:
+                heavy_chain_label += ", ".join(self.heavy_chains)
+            else:
+                heavy_chain_label += "None"
+
+            light_chain_label = "Light Chains: "
+            if self.light_chains:
+                light_chain_label += ", ".join(self.light_chains)
+            else:
+                light_chain_label += "None"
+
+            options.append([3, heavy_chain_label, "heavy_chain"])
+            options.append([3, light_chain_label, "light_chain"])
+
+        # Settings
         threshold_label = f"Threshold: {str(self.prob_threshold)}"
         show_labels_label = f"Show Labels: {self.show_labels}"
         distance_labels_label = f"Distance Labels: {self.distance_labels}"
+        options.extend(
+            [
+                [3, threshold_label, "threshold"],
+                [2, show_labels_label, "cmd.get_wizard().toggle_labels()"],
+                [2, distance_labels_label, "cmd.get_wizard().toggle_label_pos()"],
+            ]
+        )
 
-        return [
-            [1, "Paratope Heatmap", ""],
-            [3, molecule_label, "molecule"],
-            [3, heavy_chain_label, "heavy_chain"],
-            [3, light_chain_label, "light_chain"],
-            [3, threshold_label, "threshold"],
-            [2, show_labels_label, "cmd.get_wizard().toggle_labels()"],
-            [2, distance_labels_label, "cmd.get_wizard().toggle_label_pos()"],
-            [2, "Run", "cmd.get_wizard().run()"],
+        # Run button
+        if self.state >= WizardState.CHAINS_SELECTED:
+            options.append([2, "Run", "cmd.get_wizard().run()"])
+
+        # Close button
+        options.append(
             [2, "Dismiss", "cmd.set_wizard()"],
-        ]
+        )
+
+        return options
