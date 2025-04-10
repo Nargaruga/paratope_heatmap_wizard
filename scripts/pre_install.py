@@ -22,6 +22,7 @@ def main():
                     "--no-capture-output",
                     "-n",
                     f"{env_name}",
+                    "which",
                     "ANARCI",
                 ],
                 check=True,
@@ -33,7 +34,7 @@ def main():
                 # install muscle manually
                 print("Installing MUSCLE...")
                 muscle_dir = os.path.join(wizard_root, "ext", "muscle")
-                shutil.rmtree(Path(muscle_dir))
+                shutil.rmtree(Path(muscle_dir), ignore_errors=True)
                 Path(muscle_dir).mkdir()
                 subprocess.run(
                     [
