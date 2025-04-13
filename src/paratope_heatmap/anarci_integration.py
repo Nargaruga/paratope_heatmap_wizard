@@ -36,7 +36,6 @@ def compute_cdrs(
     sequence = "".join([res[0] for res in residues])
     ids = [res[1] for res in residues]
 
-    # Use ANARCI to number the input sequence with Chothia scheme
     if os.name == "nt":
         # Use Docker version
         res = subprocess.run(
@@ -92,14 +91,14 @@ def compute_cdrs(
         (res_pos, res_name) for (res_pos, res_name) in numbering if res_name != "-"
     ]
 
-    for i, (res_pos, res_name) in enumerate(filtered):
+    for i, ((res_id, _), res_name) in enumerate(filtered):
         res = Residue(res_name, ids[i], chain, 0.0)
 
-        if res_pos in extended_cdr1_range:
+        if res_id in extended_cdr1_range:
             extended_cdrs[0].residues.append(res)
-        if res_pos in extended_cdr2_range:
+        if res_id in extended_cdr2_range:
             extended_cdrs[1].residues.append(res)
-        if res_pos in extended_cdr3_range:
+        if res_id in extended_cdr3_range:
             extended_cdrs[2].residues.append(res)
 
     return extended_cdrs
