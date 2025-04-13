@@ -5,14 +5,19 @@ import json
 from .cdr import CDR
 
 
-def read_parapred_output(output_file) -> list[str, float]:
+class ParapredError(Exception):
+    """Custom exception for Parapred errors."""
+
+    pass
+
+
+def read_parapred_output(output_file) -> list[tuple[str, float]]:
     """Parses the output of Parapred."""
 
     try:
         data = json.load(output_file)
-    except json.JSONDecodeError:
-        print(f"Error decoding JSON Parapred output: {output_file}")
-        raise
+    except json.JSONDecodeError as e:
+        raise ParapredError(f"error decoding Parapred output: {e.msg}")
 
     return list(data.values())[0]
 
@@ -26,8 +31,6 @@ def score_cdr(cdr: CDR) -> CDR:
         prefix = ["powershell.exe"]
     else:
         prefix = []
-
-    print(f"Sequence: {cdr.get_sequence()}")
 
     subprocess.run(
         prefix

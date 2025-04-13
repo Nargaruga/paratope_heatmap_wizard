@@ -33,6 +33,10 @@ class Heatmap:
             print("Error: molecule name not provided.")
             return
 
+        if not h_chain_ids and not l_chain_ids:
+            print("Error: no chains provided.")
+            return
+
         # Identify the CDRs and feed them to Parapred
         print("Computing scores...")
         h_cdrs = []

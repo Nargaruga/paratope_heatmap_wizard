@@ -1,11 +1,9 @@
-import os
-import pathlib
 from enum import IntEnum, auto
 
 from pymol.wizard import Wizard
 from pymol import cmd
 
-from paratope_heatmap import anarci_integration, heatmap
+from paratope_heatmap import anarci_integration, parapred_integration, heatmap
 
 
 class WizardState(IntEnum):
@@ -195,17 +193,18 @@ class Paratope(Wizard):
         self.heatmap = heatmap.Heatmap(
             self.molecule, self.selection_name, self.prob_threshold
         )
+
         try:
-            self.heatmap.compute_scores(
-                self.heavy_chains, self.light_chains
-            )
+            self.heatmap.compute_scores(self.heavy_chains, self.light_chains)
         except (
             anarci_integration.AnarciError,
+            parapred_integration.ParapredError,
             FileNotFoundError,
         ) as e:
             print(f"Failed to identify paratope: {e}")
             self.state = WizardState.CHAINS_SELECTED
-            raise
+            cmd.refresh_wizard()
+            return
 
         cmd.show_as("licorice", self.molecule)
         if self.highlight:
