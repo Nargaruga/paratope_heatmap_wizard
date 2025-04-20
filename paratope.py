@@ -2,6 +2,7 @@ from enum import IntEnum, auto
 
 from pymol.wizard import Wizard
 from pymol import cmd
+import threading
 
 from paratope_heatmap import anarci_integration, parapred_integration, heatmap
 
@@ -276,28 +277,35 @@ class Paratope(Wizard):
             print("Please select both the heavy and light chain.")
             return
 
-        # TODO separate thread
-        self.input_state = WizardTaskState.IDENTIFYING_PARATOPE
+        def aux():
+            self.task_state = WizardTaskState.IDENTIFYING_PARATOPE
+            cmd.refresh_wizard()
 
-        self.heatmap = heatmap.Heatmap(
-            self.molecule, self.selection_name, self.prob_threshold
-        )
+            self.heatmap = heatmap.Heatmap(
+                self.molecule, self.selection_name, self.prob_threshold
+            )
 
-        try:
-            self.heatmap.compute_scores(self.heavy_chains, self.light_chains)
-        except (
-            anarci_integration.AnarciError,
-            parapred_integration.ParapredError,
-            FileNotFoundError,
-        ) as e:
-            print(f"Failed to identify paratope: {e}")
+            try:
+                self.heatmap.compute_scores(self.heavy_chains, self.light_chains)
+            except (
+                anarci_integration.AnarciError,
+                parapred_integration.ParapredError,
+                FileNotFoundError,
+            ) as e:
+                print(f"Failed to identify paratope: {e}")
+                self.update_input_state()
+                return
+
+            cmd.show_as("licorice", self.molecule)
+            if self.highlight:
+                self.heatmap.create_heatmap()
+                self.heatmap.create_labels()
+            self.heatmap.select_paratope()
+
+            self.task_state = WizardTaskState.IDLE
             self.update_input_state()
-            return
 
-        cmd.show_as("licorice", self.molecule)
-        if self.highlight:
-            self.heatmap.create_heatmap()
-            self.heatmap.create_labels()
-        self.heatmap.select_paratope()
-
-        self.update_input_state()
+        worker_thread = threading.Thread(
+            target=aux,
+        )
+        worker_thread.start()
