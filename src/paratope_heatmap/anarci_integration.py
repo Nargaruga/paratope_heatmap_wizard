@@ -65,6 +65,10 @@ def compute_cdrs(
         from anarci import number
 
         numbering, _ = number(sequence, scheme="imgt")
+        if not numbering:
+            raise AnarciError("ANARCI failed to number the sequence")
+
+        numbering = [(res_pos, res_name) for ((res_pos, _), res_name) in numbering]
 
     if numbering is False or len(numbering) == 0:
         raise AnarciError("ANARCI failed to number the sequence")
@@ -91,14 +95,14 @@ def compute_cdrs(
         (res_pos, res_name) for (res_pos, res_name) in numbering if res_name != "-"
     ]
 
-    for i, ((res_id, _), res_name) in enumerate(filtered):
+    for i, (res_pos, res_name) in enumerate(filtered):
         res = Residue(res_name, ids[i], chain, 0.0)
 
-        if res_id in extended_cdr1_range:
+        if res_pos in extended_cdr1_range:
             extended_cdrs[0].residues.append(res)
-        if res_id in extended_cdr2_range:
+        if res_pos in extended_cdr2_range:
             extended_cdrs[1].residues.append(res)
-        if res_id in extended_cdr3_range:
+        if res_pos in extended_cdr3_range:
             extended_cdrs[2].residues.append(res)
 
     return extended_cdrs
