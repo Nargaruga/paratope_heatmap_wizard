@@ -15,7 +15,6 @@ class WizardInputState(IntEnum):
     READY = auto()
     MOLECULE_SELECTED = auto()
     CHAINS_SELECTED = auto()
-    SIMULATION_READY = auto()
 
 
 class WizardTaskState(IntEnum):
@@ -266,7 +265,7 @@ class Paratope(Wizard):
             self.heatmap.update_threshold(threshold)
         cmd.refresh_wizard()
 
-    def run(self):
+    def run(self, block=False):
         """Compute and visualize the paratope heatmap on the selected molecule."""
 
         if self.molecule is None:
@@ -305,7 +304,10 @@ class Paratope(Wizard):
             self.task_state = WizardTaskState.IDLE
             self.update_input_state()
 
-        worker_thread = threading.Thread(
-            target=aux,
-        )
-        worker_thread.start()
+        if block:
+            aux()
+        else:
+            worker_thread = threading.Thread(
+                target=aux,
+            )
+            worker_thread.start()
