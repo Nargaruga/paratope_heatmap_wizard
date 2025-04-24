@@ -62,13 +62,12 @@ class Heatmap:
         cmd.color("grey", self.molecule_name)
         for cdr in self.annotated_cdrs:
             for residue in cdr.residues:
-                score_int = int(residue.prob * 100)
                 cmd.alter(
                     f"%{self.molecule_name} and chain {residue.chain} and resi {residue.id}",
-                    f"b = {score_int}",
+                    f"b = {residue.prob}",
                 )
 
-                if score_int > 50:
+                if residue.prob > 0.5:
                     cmd.select(
                         "to_color",
                         f"%{self.molecule_name} and chain {residue.chain} and resi {residue.id}",
@@ -76,7 +75,7 @@ class Heatmap:
                     )
 
         # TODO check that the selection is not empty
-        cmd.spectrum("b", "red_green", "to_color", 50, 100)
+        cmd.spectrum("b", "red_green", "to_color", 0.5, 1.0)
         cmd.delete("to_color")
 
     def create_labels(self):
@@ -115,7 +114,7 @@ class Heatmap:
         """Update the probability threshold and redraw the labels."""
         self.prob_threshold = threshold
         self.create_labels()
-        cmd.deselect()
+        cmd.delete(self.selection_name)
         self.select_paratope()
 
     def show_labels(self):
