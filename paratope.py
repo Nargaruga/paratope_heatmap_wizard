@@ -1,10 +1,17 @@
+import os
+import pathlib
 from enum import IntEnum, auto
 
 from pymol.wizard import Wizard
 from pymol import cmd
 import threading
 
-from paratope_heatmap import anarci_integration, parapred_integration, heatmap
+from paratope_heatmap import (
+    anarci_integration,
+    antibody_chains,
+    parapred_integration,
+    heatmap,
+)
 
 
 class WizardState(IntEnum):
@@ -46,6 +53,8 @@ class Paratope(Wizard):
             0.8  # residues with probability below this threshold will not be labeled
         )
         self.highlight = True
+
+        self.init_cache()
 
         self.populate_molecule_choices()
         self.populate_threshold_choices()
@@ -132,10 +141,35 @@ class Paratope(Wizard):
             self.input_state = WizardInputState.READY
             return
 
-        if self.heavy_chains and self.light_chains:
+        if self.heavy_chains or self.light_chains:
             self.input_state = WizardInputState.CHAINS_SELECTED
 
         cmd.refresh_wizard()
+
+    def init_cache(self):
+        self.cache_dir = pathlib.Path(__file__).parent.resolve()
+
+    def fetch_cached_chains(self) -> antibody_chains.AntibodyChains:
+        """Return the cached antibody chains for the current molecule."""
+
+        chains = antibody_chains.AntibodyChains([], [])
+        try:
+            chains.deserialize(
+                os.path.join(self.cache_dir, f"{self.molecule}_chains.yaml")
+            )
+
+        except FileNotFoundError:
+            pass
+
+        return chains
+
+    def autocomplete(self):
+        """Load the antibody heavy and light chains with from cache."""
+
+        chains = self.fetch_cached_chains()
+        self.heavy_chains = chains.heavy_chains
+        self.light_chains = chains.light_chains
+        self.update_input_state()
 
     def populate_molecule_choices(self):
         """Populate the menu with the available molecules in the session."""
@@ -219,6 +253,7 @@ class Paratope(Wizard):
         self.molecule = molecule
         self.selection_name = f"{molecule}_paratope"
         self.populate_chain_choices()
+        self.autocomplete()
         self.update_input_state()
 
         cmd.refresh_wizard()
@@ -273,8 +308,13 @@ class Paratope(Wizard):
             return
 
         if self.heavy_chains is None or self.light_chains is None:
-            print("Please select both the heavy and light chain.")
+            print("Please specify the antibody chains.")
             return
+
+        chains = antibody_chains.AntibodyChains(
+            light_chains=self.light_chains, heavy_chains=self.heavy_chains
+        )
+        chains.serialize(os.path.join((self.cache_dir), f"{self.molecule}_chains.yaml"))
 
         def aux():
             self.task_state = WizardTaskState.IDENTIFYING_PARATOPE
