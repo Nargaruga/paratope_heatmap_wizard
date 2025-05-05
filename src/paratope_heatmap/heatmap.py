@@ -83,7 +83,7 @@ class Heatmap:
 
         print("Creating labels...")
 
-        cmd.label("all", "''")
+        cmd.label(self.molecule_name, "''")
         cmd.set("label_connector", True)
 
         for cdr in self.annotated_cdrs:
