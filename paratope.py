@@ -199,7 +199,7 @@ class Paratope(Wizard):
                 [
                     1,
                     c,
-                    'cmd.get_wizard().set_heavy_chain("' + c + '")',
+                    'cmd.get_wizard().toggle_heavy_chain("' + c + '")',
                 ]
             )
 
@@ -209,7 +209,7 @@ class Paratope(Wizard):
                 [
                     1,
                     c,
-                    'cmd.get_wizard().set_light_chain("' + c + '")',
+                    'cmd.get_wizard().toggle_light_chain("' + c + '")',
                 ]
             )
 
@@ -256,31 +256,39 @@ class Paratope(Wizard):
         self.autocomplete()
         self.update_input_state()
 
-        cmd.refresh_wizard()
+    def is_heavy_chain_selected(self, chain):
+        """Check if the specified heavy chain was already selected."""
 
-    def set_heavy_chain(self, chain):
+        return chain in self.heavy_chains
+
+    def is_light_chain_selected(self, chain):
+        """Check if the specified light chain was already selected."""
+
+        return chain in self.light_chains
+
+    def toggle_heavy_chain(self, chain):
         """Set the heavy chain to be used for the heatmap."""
 
-        if chain in self.heavy_chains:
+        if self.is_heavy_chain_selected(chain):
+            print(f"Removing heavy chain {chain}")
             self.heavy_chains.remove(chain)
         else:
+            print(f"Adding heavy chain {chain}")
             self.heavy_chains.append(chain)
 
         self.update_input_state()
 
-        cmd.refresh_wizard()
-
-    def set_light_chain(self, chain):
+    def toggle_light_chain(self, chain):
         """Set the light chain to be used for the heatmap."""
 
-        if chain in self.light_chains:
+        if self.is_light_chain_selected(chain):
+            print(f"Removing light chain {chain}")
             self.light_chains.remove(chain)
         else:
+            print(f"Adding light chain {chain}")
             self.light_chains.append(chain)
 
         self.update_input_state()
-
-        cmd.refresh_wizard()
 
     def set_highlight(self, highlight):
         """Set whether to highlight the paratope on the protein structure."""
@@ -303,20 +311,22 @@ class Paratope(Wizard):
     def run(self, block=False):
         """Compute and visualize the paratope heatmap on the selected molecule."""
 
-        if self.molecule is None:
-            print("Please select a molecule.")
-            return
-
-        if self.heavy_chains is None or self.light_chains is None:
-            print("Please specify the antibody chains.")
-            return
-
-        chains = antibody_chains.AntibodyChains(
-            light_chains=self.light_chains, heavy_chains=self.heavy_chains
-        )
-        chains.serialize(os.path.join((self.cache_dir), f"{self.molecule}_chains.yaml"))
-
         def aux():
+            if self.molecule is None:
+                print("Please select a molecule.")
+                return
+
+            if not self.heavy_chains or not self.light_chains:
+                print("Please specify the antibody chains.")
+                return
+
+            chains = antibody_chains.AntibodyChains(
+                light_chains=self.light_chains, heavy_chains=self.heavy_chains
+            )
+            chains.serialize(
+                os.path.join((self.cache_dir), f"{self.molecule}_chains.yaml")
+            )
+
             self.task_state = WizardTaskState.IDENTIFYING_PARATOPE
             cmd.refresh_wizard()
 
