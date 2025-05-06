@@ -320,8 +320,17 @@ class Paratope(Wizard):
             self.task_state = WizardTaskState.IDENTIFYING_PARATOPE
             cmd.refresh_wizard()
 
+            heavy_chains_str = " or ".join(self.heavy_chains)
+            light_chains_str = " or ".join(self.light_chains)
+
+            antibody_selection = f"{self.molecule} and (chain {heavy_chains_str} or chain {light_chains_str})"
+            antigen_selection = f"{self.molecule} and not (chain {heavy_chains_str} or chain {light_chains_str})"
             self.heatmap = heatmap.Heatmap(
-                self.molecule, self.selection_name, self.prob_threshold
+                self.molecule,
+                antibody_selection,
+                antigen_selection,
+                self.selection_name,
+                self.prob_threshold,
             )
 
             try:
@@ -335,7 +344,10 @@ class Paratope(Wizard):
                 self.update_input_state()
                 return
 
-            cmd.show_as("licorice", self.molecule)
+            cmd.show_as(
+                "licorice",
+                antibody_selection,
+            )
             if self.highlight:
                 self.heatmap.create_heatmap()
                 self.heatmap.create_labels()

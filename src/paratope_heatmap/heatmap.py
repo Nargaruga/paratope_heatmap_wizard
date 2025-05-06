@@ -20,9 +20,11 @@ class Heatmap:
 
     default_prob_threshold = 0.3
 
-    def __init__(self, molecule_name, selection_name, threshold):
+    def __init__(self, molecule_name, antibody_selection, antigen_selection, selection_name, threshold):
         self.prob_threshold = threshold  # threshold for label visualization
         self.molecule_name = molecule_name  # the molecule to create the heatmap on
+        self.antibody_selection = antibody_selection
+        self.antigen_selection = antigen_selection
         self.selection_name = selection_name  # the selection name for the paratope
         self.annotated_cdrs = []  # CDRs annotated with probabilities
 
@@ -59,7 +61,8 @@ class Heatmap:
         print("Creating heatmap...")
 
         cmd.alter("all", "b = 0")
-        cmd.color("grey", self.molecule_name)
+        cmd.color("grey", f"{self.molecule_name} and {self.antibody_selection}")
+        cmd.color("tv_blue", f"{self.molecule_name} and {self.antigen_selection}")
         for cdr in self.annotated_cdrs:
             for residue in cdr.residues:
                 cmd.alter(
