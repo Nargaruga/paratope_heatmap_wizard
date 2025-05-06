@@ -81,7 +81,7 @@ class Paratope(Wizard):
         """Return the menu panel for the wizard."""
 
         # Title
-        options = [1, "Paratope Heatmap", ""]
+        options = [[1, "Paratope Heatmap", ""]]
 
         # Molecule list
         if self.input_state >= WizardInputState.READY:
