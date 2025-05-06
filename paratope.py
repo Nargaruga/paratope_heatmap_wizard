@@ -316,7 +316,7 @@ class Paratope(Wizard):
                 print("Please select a molecule.")
                 return
 
-            if not self.heavy_chains or not self.light_chains:
+            if not self.heavy_chains and not self.light_chains:
                 print("Please specify the antibody chains.")
                 return
 
@@ -330,11 +330,24 @@ class Paratope(Wizard):
             self.task_state = WizardTaskState.IDENTIFYING_PARATOPE
             cmd.refresh_wizard()
 
-            heavy_chains_str = " or ".join(self.heavy_chains)
-            light_chains_str = " or ".join(self.light_chains)
+            heavy_chains_str = "none"
+            for hc in self.heavy_chains:
+                if heavy_chains_str == "none":
+                    heavy_chains_str = f"chain {hc}"
+                else:
+                    heavy_chains_str += f" or chain {hc}"
 
-            antibody_selection = f"{self.molecule} and (chain {heavy_chains_str} or chain {light_chains_str})"
-            antigen_selection = f"{self.molecule} and not (chain {heavy_chains_str} or chain {light_chains_str})"
+            light_chains_str = "none"
+            for lc in self.light_chains:
+                if light_chains_str == "none":
+                    light_chains_str = f"chain {lc}"
+                else:
+                    light_chains_str += f" or chain {lc}"
+
+            antibody_selection = (
+                f"{self.molecule} and ({heavy_chains_str} or {light_chains_str})"
+            )
+            antigen_selection = f"{self.molecule} and not ({antibody_selection})"
             self.heatmap = heatmap.Heatmap(
                 self.molecule,
                 antibody_selection,
