@@ -147,7 +147,10 @@ class Paratope(Wizard):
         cmd.refresh_wizard()
 
     def init_cache(self):
-        self.cache_dir = pathlib.Path(__file__).parent.resolve()
+        self.cache_dir = os.path.join(
+            pathlib.Path(__file__).parent.resolve(), ".paratope_wiz_cache"
+        )
+        os.makedirs(self.cache_dir, exist_ok=True)
 
     def fetch_cached_chains(self) -> antibody_chains.AntibodyChains:
         """Return the cached antibody chains for the current molecule."""
