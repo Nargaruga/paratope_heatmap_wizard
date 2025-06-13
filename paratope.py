@@ -370,10 +370,6 @@ class Paratope(Wizard):
                 self.update_input_state()
                 return
 
-            cmd.show_as(
-                "licorice",
-                antibody_selection,
-            )
             if self.highlight:
                 self.heatmap.create_heatmap()
                 self.heatmap.create_labels()
