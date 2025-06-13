@@ -235,9 +235,9 @@ class Paratope(Wizard):
 
         self.show_labels = not self.show_labels
         if self.show_labels:
-            cmd.show("labels")
+            self.heatmap.show_labels()
         else:
-            cmd.hide("labels")
+            self.heatmap.hide_labels()
         cmd.refresh_wizard()
 
     def toggle_label_pos(self):

@@ -122,10 +122,13 @@ class Heatmap:
 
     def show_labels(self):
         """Show the labels on the protein structure."""
+        if self.selection_name in cmd.get_names("selections"):
+            cmd.show("labels", selection=self.selection_name)
 
     def hide_labels(self):
         """Hide the labels on the protein structure."""
-        cmd.hide("labels")
+        if self.selection_name in cmd.get_names("selections"):
+            cmd.hide("labels", selection=self.selection_name)
 
     def reset(self):
         cmd.label("all", "''")
