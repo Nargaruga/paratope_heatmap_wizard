@@ -27,10 +27,16 @@ def score_cdr(cdr: CDR) -> CDR:
 
     parapred_output = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
 
-    subprocess.run(
-        f"conda run --no-capture-output --name parapred parapred predict {cdr.get_sequence()} -o {parapred_output.name}",
-        shell=True,
-    )
+    try:
+        subprocess.run(
+            f"conda run --no-capture-output --name parapred parapred predict {cdr.get_sequence()} -o {parapred_output.name}",
+            shell=True,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise ParapredError(f"failed to run parapred: {e.stderr.strip()}")
 
     annotated_sequence = read_parapred_output(parapred_output)
     for i, residue in enumerate(cdr.residues):

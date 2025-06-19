@@ -14,6 +14,10 @@ from paratope_heatmap import (
 )
 
 
+class ParatopeIdentificationError(Exception):
+    pass
+
+
 class WizardInputState(IntEnum):
     READY = auto()
     MOLECULE_SELECTED = auto()
@@ -143,6 +147,8 @@ class Paratope(Wizard):
         cmd.refresh_wizard()
 
     def init_cache(self):
+        """Create the cache directory if necessary."""
+
         self.cache_dir = os.path.join(
             pathlib.Path(__file__).parent.resolve(), ".paratope_wiz_cache"
         )
@@ -363,6 +369,7 @@ class Paratope(Wizard):
                 FileNotFoundError,
             ) as e:
                 print(f"Failed to identify paratope: {e}")
+                self.task_state = WizardTaskState.IDLE
                 self.update_input_state()
                 return
 

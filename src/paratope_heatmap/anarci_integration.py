@@ -38,19 +38,25 @@ def compute_cdrs(
 
     if os.name == "nt":
         # Use Docker version
-        res = subprocess.run(
-            f"docker run --rm anarci --scheme imgt -i {sequence}",
-            capture_output=True,
-            text=True,
-        )
 
-        numbering = [
-            parse_line(line)
-            for line in res.stdout.strip().splitlines()
-            if line[0] != "#" and line != r"\\"
-        ]
+        try:
+            res = subprocess.run(
+                f"docker run --rm anarci --scheme imgt -i {sequence}",
+                capture_output=True,
+                text=True,
+                check=True,
+            )
 
-        numbering = [x for x in numbering if x is not None]
+            numbering = [
+                parse_line(line)
+                for line in res.stdout.strip().splitlines()
+                if line[0] != "#" and line != r"\\"
+            ]
+
+            numbering = [x for x in numbering if x is not None]
+        except subprocess.CalledProcessError as e:
+            raise AnarciError("failed to run ANARCI. Is Docker running?")
+
     else:
         from anarci import number
 
@@ -61,7 +67,7 @@ def compute_cdrs(
         numbering = [(res_pos, res_name) for ((res_pos, _), res_name) in numbering]
 
     if numbering is False or len(numbering) == 0:
-        raise AnarciError("ANARCI failed to number the sequence")
+        raise AnarciError("ANARCI failed to number the sequence.")
 
     # Store the CDR sequences with two extra residues on each side
     if chain_type == ChainType.HEAVY:
