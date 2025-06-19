@@ -39,17 +39,7 @@ def compute_cdrs(
     if os.name == "nt":
         # Use Docker version
         res = subprocess.run(
-            [
-                "docker",
-                "run",
-                "--rm",
-                "anarci",
-                "--scheme",
-                "imgt",
-                "-i",
-                sequence,
-            ],
-            check=True,
+            f"docker run --rm anarci --scheme imgt -i {sequence}",
             capture_output=True,
             text=True,
         )

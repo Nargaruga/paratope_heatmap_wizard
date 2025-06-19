@@ -27,25 +27,9 @@ def score_cdr(cdr: CDR) -> CDR:
 
     parapred_output = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
 
-    if os.name == "nt":
-        prefix = ["powershell.exe"]
-    else:
-        prefix = []
-
     subprocess.run(
-        prefix
-        + [
-            "conda",
-            "run",
-            "--no-capture-output",
-            "--name",
-            "parapred",
-            "parapred",
-            "predict",
-            cdr.get_sequence(),
-            "-o",
-            parapred_output.name,
-        ],
+        f"conda run --no-capture-output --name parapred parapred predict {cdr.get_sequence()} -o {parapred_output.name}",
+        shell=True,
     )
 
     annotated_sequence = read_parapred_output(parapred_output)
