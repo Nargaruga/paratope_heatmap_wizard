@@ -14,10 +14,6 @@ from paratope_heatmap import (
 )
 
 
-class WizardState(IntEnum):
-    """The possible states of the wizard."""
-
-
 class WizardInputState(IntEnum):
     READY = auto()
     MOLECULE_SELECTED = auto()

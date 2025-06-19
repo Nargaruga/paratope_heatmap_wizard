@@ -3,6 +3,7 @@ PyMOL wizard for paratope recognition. It leverages ANARCI and Parapred to detec
 
 ## Installation
 The wizard can be installed with the [Wizard Installer](https://github.com/Nargaruga/pymol_wizard_installer) tool.
+[Docker](https://docs.docker.com/get-started/get-docker/) is needed for installing and running on Windows.
 
 ## Usage
 The wizard can be accessed in one of two ways:
