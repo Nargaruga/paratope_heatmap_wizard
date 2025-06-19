@@ -171,16 +171,9 @@ def main():
             prefix = []
 
         subprocess.run(
-            prefix
-            + [
-                "conda",
-                "list",
-                "--name",
-                "parapred",
-            ],
+            "conda list --name parapred",
             check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            shell=True,
         )
     except subprocess.CalledProcessError:
         print("Installing Parapred...")
